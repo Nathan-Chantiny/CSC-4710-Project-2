@@ -36,13 +36,13 @@ app.listen(5000, () => {
 
 // User registration route
 app.post('/register', async (req, res) => {
-  const { username, email, password } = req.body;  // Extract username, email, and password from request body
+  const { first, last, address, cc_num, cc_name, cc_exp, cc_sec, bill_addr, phone, email, password } = req.body;  // Extract all required fields from request body
   const hashedPassword = await bcrypt.hash(password, 10);  // Hash the password using bcrypt with 10 salt rounds
 
   // Insert the new user into the 'users' table
   db.query(
-    'INSERT INTO users (username, email, password) VALUES (?, ?, ?)',
-    [username, email, hashedPassword],
+    'INSERT INTO users (first, last, address, cc_num, cc_name, cc_exp, cc_sec, bill_addr, phone, email, password) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    [first, last, address, cc_num, cc_name, cc_exp, cc_sec, bill_addr, phone, email, hashedPassword],
     (err, result) => {
       if (err) {
         return res.status(500).json({ message: 'User registration failed', error: err });  // Send error response if registration fails
@@ -54,26 +54,29 @@ app.post('/register', async (req, res) => {
 
 // User login route
 app.post('/login', (req, res) => {
-  const { username, password } = req.body;  // Extract username and password from request body
+  const { email, password } = req.body;  // Extract email and password from request body
 
-  // Query the database for the user with the provided username
-  db.query('SELECT * FROM users WHERE username = ?', [username], async (err, results) => {
-    if (err || results.length === 0) {
-      return res.status(400).json({ message: 'User not found' });  // Send error response if user is not found
+  // Query the database for the user with the provided email
+  db.query('SELECT * FROM users WHERE email = ?', [email], async (err, results) => {
+    if (err) {
+      return res.status(500).json({ message: "Login failed", error: err }); // Send error response if query fails
     }
 
-    const user = results[0];  // Get the user record from the query result
-    const passwordMatch = await bcrypt.compare(password, user.password);  // Compare the provided password with the hashed password
+    if (results.length === 0) {
+      return res.status(401).json({ message: "Invalid email or password" }); // Send error response if user not found
+    }
+
+    const user = results[0]; // Get the user record from the query result
+    const passwordMatch = await bcrypt.compare(password, user.password); // Compare the provided password with the hashed password
 
     if (!passwordMatch) {
-      return res.status(401).json({ message: 'Invalid credentials' });  // Send error response if the password does not match
+      return res.status(401).json({ message: "Invalid email or password" }); // Send error response if password does not match
     }
 
     // Generate a JWT token with the user ID and a secret key, valid for 3 hour
-    const token = jwt.sign({ userId: user.id }, 'your_jwt_secret', { expiresIn: '3h' });
+    const token = jwt.sign({ userId: user.id }, "your_jwt_secret", {expiresIn: "3h"});
 
-    // Send the JWT token as the response
-    res.json({ token });
+    res.status(200).json({ message: "Login successful", token }); // Send success response with the token
   });
 });
 
