@@ -2,8 +2,7 @@ Course Project
 
 **Description**
 
-1.  <img src="media/image1.jpg" style="width:3.11458in;height:1.75in" />Consider
-    the design of a database for a website for managing driveway-sealing
+1.  Consider the design of a database for a website for managing driveway-sealing
     for a contractor David Smith. A client will need to register with
     the website with the following information: first name, last name,
     address, credit card information, phone number, and email. A unique
