@@ -15,7 +15,7 @@ const Login = () => {
     try {
       const res = await axios.post('http://localhost:5000/login', { email, password });
       localStorage.setItem('token', res.data.token); // Save JWT token in localStorage
-      navigate('/dashboard'); // Redirect to dashboard after successful login
+      navigate('/'); // Redirect to home after successful login
     } catch (err) {
       setError('Login failed. Please try again.');
     }
@@ -29,8 +29,6 @@ const Login = () => {
       <nav style={{ textAlign: 'center', marginBottom: '20px' }}>
         <ul style={{ listStyleType: 'none', padding: '0', display: 'flex', justifyContent: 'center', gap: '20px' }}>
           <li><Link to="/" style={menuLinkStyle}>Home</Link></li>
-          <li><Link to="/dashboard" style={menuLinkStyle}>Dashboard</Link></li>
-          <li><Link to="/profile" style={menuLinkStyle}>Profile</Link></li>  {/* Replaced Login link with Profile */}
           <li><Link to="/register" style={menuLinkStyle}>Register</Link></li>
         </ul>
       </nav>

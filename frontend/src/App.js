@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';  // I
 import HomePage from './HomePage';  // Importing the HomePage component
 import Login from './Login';  // Importing the Login component
 import Register from './Register';  // Importing the Register component
-import Dashboard from './Dashboard';  // Importing the Dashboard component
+import Quote from "./Quote";  // Importing the Quote component
 import Profile from './Profile';  // Importing the Profile component
 import PrivateRoute from './PrivateRoute';  // Importing the PrivateRoute component for protected routes
 
@@ -24,14 +24,7 @@ function App() {
 
         {/* Private routes */}
         {/* Dashboard route, protected by PrivateRoute (only accessible if authenticated) */}
-        <Route
-          path="/dashboard"
-          element={
-            <PrivateRoute>
-              <Dashboard />  {/* Renders Dashboard if user is authenticated */}
-            </PrivateRoute>
-          }
-        />
+        <Route path="/quote" element={<Quote />} />
 
         {/* Profile route, protected by PrivateRoute (only accessible if authenticated) */}
         <Route

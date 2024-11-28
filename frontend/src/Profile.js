@@ -20,9 +20,7 @@ const Profile = () => {
       <nav style={{ textAlign: 'center', marginBottom: '20px' }}>
         <ul style={{ listStyleType: 'none', padding: '0', display: 'flex', justifyContent: 'center', gap: '20px' }}>
           <li><Link to="/" style={menuLinkStyle}>Home</Link></li>
-          <li><Link to="/dashboard" style={menuLinkStyle}>Dashboard</Link></li>
-          <li><Link to="/login" style={menuLinkStyle}>Login</Link></li>
-          <li><Link to="/register" style={menuLinkStyle}>Register</Link></li>
+          <li><Link to="/quote" style={menuLinkStyle}>Quote</Link></li>
           <li>
             <button
               onClick={handleLogout}

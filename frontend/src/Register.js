@@ -76,18 +76,8 @@ const Register = () => {
             </Link>
           </li>
           <li>
-            <Link to="/dashboard" style={menuLinkStyle}>
-              Dashboard
-            </Link>
-          </li>
-          <li>
             <Link to="/login" style={menuLinkStyle}>
               Login
-            </Link>
-          </li>
-          <li>
-            <Link to="/profile" style={menuLinkStyle}>
-              Profile
             </Link>
           </li>
         </ul>
