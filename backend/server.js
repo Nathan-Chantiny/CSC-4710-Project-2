@@ -136,7 +136,7 @@ app.get("/profile", authenticateToken, (req, res) => {
 
   // Query the database to get the user data based on the userId
   db.query(
-    "SELECT username, email FROM users WHERE id = ?",
+    "SELECT first, last FROM users WHERE id = ?",
     [userId],
     (err, result) => {
       if (err || result.length === 0) {
@@ -144,7 +144,7 @@ app.get("/profile", authenticateToken, (req, res) => {
       }
 
       // Send user profile data as response
-      res.json({ username: result[0].username, email: result[0].email });
+      res.json({ first: result[0].first, last: result[0].last });
     }
   );
 });
@@ -203,4 +203,52 @@ app.post("/add_quote", authenticateToken, (req, res) => {
       res.status(201).json({ message: "Quote submitted successfully" });
     }
   );
+});
+
+app.get("/quotes", authenticateToken, (req, res) => {
+  console.log("Received request to /quotes endpoint");
+
+  // Query the database to get all items from the quotes table and join with the users table
+  const query = `
+    SELECT quotes.*, users.first, users.last, users.phone, users.email 
+    FROM quotes 
+    JOIN users ON quotes.cust_id = users.id
+  `;
+  db.query(query, (err, result) => {
+    if (err) {
+      console.error("Error fetching quotes:", err);
+      return res
+        .status(500)
+        .json({ message: "Error fetching quotes", error: err.message });
+    }
+
+    if (result.length === 0) {
+      console.log("No quotes found");
+      return res.status(404).json({ message: "No quotes found" }); // Send error if no quotes found
+    }
+
+    // Send quotes data as response
+    res.json(result);
+  });
+});
+
+app.get("/specific_quotes", authenticateToken, (req, res) => {
+  const cust_id = req.user.userId;
+
+  // Query the database to get all items from the quotes table
+  db.query("SELECT * FROM quotes WHERE cust_id=?", [cust_id], (err, result) => {
+    if (err) {
+      console.error("Error fetching quotes:", err);
+      return res
+        .status(500)
+        .json({ message: "Error fetching quotes", error: err });
+    }
+
+    if (result.length === 0) {
+      return res.status(404).json({ message: "No quotes found" }); // Send error if no quotes found
+    }
+
+    // Send quotes data as response
+    res.json(result);
+  });
 });

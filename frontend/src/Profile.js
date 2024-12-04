@@ -1,8 +1,8 @@
 // This is the content of the profile page
-import React from 'react';
+import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from 'react-router-dom';
-import { getUsernameFromToken } from './utils'; // Helper function to get the username
 import { jwtDecode } from "jwt-decode";
+import axios from "axios";
 
 const getUserIdFromToken = () => {
   const token = localStorage.getItem("token");
@@ -20,7 +20,63 @@ const getUserIdFromToken = () => {
 const Profile = () => {
   const navigate = useNavigate();
   const userId = getUserIdFromToken(); // Extract the user ID from the JWT token
-  const username = getUsernameFromToken(); // Extract the username from the JWT token
+  const [userData, setUserData] = useState({ first: "", last: "" });
+  const [quotes, setQuotes] = useState([]);
+  const [specificQuotes, setSpecificQuotes] = useState([]);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await axios.get("http://localhost:5000/profile", {
+          headers: {
+            Authorization: `Bearer ${token}`, // Send the JWT token in the Authorization header
+          },
+        });
+        setUserData(res.data);
+      } catch (err) {
+        console.error("Error fetching user data:", err);
+        if (err.response && err.response.status === 401) {
+          navigate("/login"); // Redirect to login page if unauthorized
+        }
+      }
+    };
+
+    const fetchQuotes = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await axios.get("http://localhost:5000/quotes", {
+          headers: {
+            Authorization: `Bearer ${token}`, // Send the JWT token in the Authorization header
+          },
+        });
+        setQuotes(res.data);
+      } catch (err) {
+        console.error("Error fetching quotes:", err);
+        setError("Error fetching quotes. Please try again.");
+      }
+    };
+
+    const fetchSpecificQuotes = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await axios.get("http://localhost:5000/specific_quotes", {
+          headers: {
+            Authorization: `Bearer ${token}`, // Send the JWT token in the Authorization header
+          },
+        });
+        setSpecificQuotes(res.data);
+      } catch (err) {
+        console.error("Error fetching quotes:", err);
+        setError("Error fetching quotes. Please try again.");
+      }
+    };
+
+    fetchUserData();
+    fetchQuotes();
+    fetchSpecificQuotes();
+  }, [navigate]);
 
   const handleLogout = () => {
     localStorage.removeItem("token"); // Remove the JWT token from localStorage
@@ -99,15 +155,20 @@ const Profile = () => {
           >
             Welcome to Your Profile Page, David Smith!
           </h3>
-          <p style={{ fontSize: "1.1rem", color: "#555", lineHeight: "1.6" }}>
-            Qutoe example 1
-          </p>
-          <p style={{ fontSize: "1.1rem", color: "#555", lineHeight: "1.6" }}>
-            Quote example 2
-          </p>
-          <p style={{ fontSize: "1.1rem", color: "#555", lineHeight: "1.6" }}>
-            Quote example 3
-          </p>
+          <h2>Quotes</h2>
+          {error && <p>{error}</p>}
+          <div>
+            {quotes.map((quote) => (
+              <div key={quote.id} style={{ marginBottom: "20px" }}>
+                <h1 style={h1Style}>{quote.first} {quote.last} -{">"} {quote.phone}, {quote.email}{" "} </h1>
+                <p>Address: {quote.address}</p>
+                <p>Square Feet: {quote.square_feet}</p>
+                <p>Price: {quote.price}</p>
+                <p>Note: {quote.note}</p>
+                {/* Add other fields as needed */}
+              </div>
+            ))}
+          </div>
         </div>
       ) : (
         <div
@@ -125,29 +186,22 @@ const Profile = () => {
               marginBottom: "15px",
             }}
           >
-            Welcome to Your Profile Page, {username}!
+            Welcome to Your Profile Page, {userData.first} {userData.last}!
           </h3>
-          <p style={{ fontSize: "1.1rem", color: "#555", lineHeight: "1.6" }}>
-            Since we have implemented **JWT authentication**, you were able to
-            navigate from the dashboard to this profile page because the JWT
-            token is stored in the browser’s **localStorage**. As long as the
-            JWT token exists and is valid, you can access private pages like
-            this profile page.
-          </p>
-          <p style={{ fontSize: "1.1rem", color: "#555", lineHeight: "1.6" }}>
-            However, if you log out, the JWT token will be removed from
-            **localStorage**, which means you will no longer be authenticated.
-            If you try to access this profile page after logging out, you will
-            be redirected to the login page because the site will no longer
-            recognize you as a logged-in user. To test this, log out and then
-            try to come back to the profile page using the direct link—you will
-            see that access is blocked.
-          </p>
-          <p style={{ fontSize: "1.1rem", color: "#555", lineHeight: "1.6" }}>
-            This demonstrates how the **Profile** page acts as a **private
-            page** that can only be accessed if the user is logged in. Without a
-            valid JWT token, the site will deny access to any private pages.
-          </p>
+          <h2>Quotes</h2>
+          {error && <p>{error}</p>}
+          <div>
+            {specificQuotes.map((specificQuote) => (
+              <div key={specificQuote.id} style={{ marginBottom: "20px" }}>
+                <h1 style={h1Style}>0{specificQuote.id}</h1>
+                <p>Address: {specificQuote.address}</p>
+                <p>Square Feet: {specificQuote.square_feet}</p>
+                <p>Price: {specificQuote.price}</p>
+                <p>Note: {specificQuote.note}</p>
+                {/* Add other fields as needed */}
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>
@@ -169,6 +223,13 @@ const menuLinkStyle = {
 // Add a hover effect for the links and buttons
 menuLinkStyle[':hover'] = {
   backgroundColor: '#e0e0e0',
+};
+
+const h1Style = {
+  fontSize: "1.5rem", // Smaller font size
+  color: "#333",
+  marginBottom: "10px",
+  textAlign: "left", // Align text to the left
 };
 
 export default Profile;
