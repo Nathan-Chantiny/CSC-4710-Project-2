@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { Link, useNavigate } from 'react-router-dom';
+import { jwtDecode } from "jwt-decode";
 
 const Quote = () => {
   const [address, setAddress] = useState("");
@@ -21,6 +22,28 @@ const Quote = () => {
     setError("");
 
     const token = localStorage.getItem("token");
+    if (!token) {
+      setError("User is not authenticated. Please log in again.");
+      return;
+    }
+
+    // Check token validity
+    try {
+      const decodedToken = jwtDecode(token);
+      console.log("Decoded Token:", decodedToken);
+      const currentTime = Date.now() / 1000;
+      if (decodedToken.exp < currentTime) {
+        console.error("Token has expired");
+        localStorage.removeItem("token");
+        setError("User is not authenticated. Please log in again.");
+        return;
+      }
+    } catch (err) {
+      console.error("Invalid token:", err);
+      setError("User is not authenticated. Please log in again.");
+      return;
+    }
+    
     console.log("Submitting with data:", {
       address,
       square_feet: squareFeet,
@@ -32,11 +55,6 @@ const Quote = () => {
       picture_five: pictureFive,
       note,
     });
-
-    if (!token) {
-      setError("User is not authenticated. Please log in again.");
-      return;
-    }
 
     try {
       const res = await axios.post(
