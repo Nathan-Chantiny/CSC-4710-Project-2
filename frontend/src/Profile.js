@@ -82,14 +82,36 @@ const Profile = () => {
     navigate("/login"); // Redirect to login page
   };
 
-  const handleApprove = (id) => {
-    console.log(`Quote ${id} approved`);
-    // You can add API logic here to mark the quote as approved
+  const handleApprove = async (quoteId) => {
+    const token = localStorage.getItem("token");
+    try {
+      await axios.patch(
+        "http://localhost:5000/update_quote_status",
+        { quoteId, approvalStatus: "approved" },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      alert("Quote approved!");
+      window.location.reload(); // Reload to fetch the updated quotes
+    } catch (err) {
+      console.error("Error approving quote:", err.message);
+      alert("Failed to approve the quote. Please try again.");
+    }
   };
 
-  const handleDeny = (id) => {
-    console.log(`Quote ${id} denied`);
-    // You can add API logic here to mark the quote as denied
+  const handleDeny = async (quoteId) => {
+    const token = localStorage.getItem("token");
+    try {
+      await axios.patch(
+        "http://localhost:5000/update_quote_status",
+        { quoteId, approvalStatus: "denied" },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      alert("Quote denied!");
+      window.location.reload(); // Reload to fetch the updated quotes
+    } catch (err) {
+      console.error("Error denying quote:", err.message);
+      alert("Failed to deny the quote. Please try again.");
+    }
   };
 
   return (

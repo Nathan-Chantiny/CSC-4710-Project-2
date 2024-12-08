@@ -233,6 +233,24 @@ app.get("/quotes", authenticateToken, (req, res) => {
   });
 });
 
+// Endpoint to update approval_status
+app.patch("/update_quote_status", authenticateToken, (req, res) => {
+  const { quoteId, approvalStatus } = req.body; // Extract the quote ID and new approval status
+
+  // Update the approval_status in the database
+  db.query(
+    "UPDATE quotes SET approval_status = ? WHERE id = ?",
+    [approvalStatus, quoteId],
+    (err, result) => {
+      if (err) {
+        return res.status(500).json({ message: "Failed to update status", error: err.message });
+      }
+      res.json({ message: "Status updated successfully" });
+    }
+  );
+});
+
+
 // Fetch specific user's quotes
 app.get("/specific_quotes", authenticateToken, (req, res) => {
   const cust_id = req.user.userId;
@@ -244,3 +262,5 @@ app.get("/specific_quotes", authenticateToken, (req, res) => {
     res.json(result);
   });
 });
+
+
