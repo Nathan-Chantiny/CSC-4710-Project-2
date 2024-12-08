@@ -29,6 +29,18 @@ db.connect((err) => {
   console.log("Connected to MySQL database.");
 });
 
+// Modify the quotes table schema to include approval_status column
+db.query(`
+  ALTER TABLE quotes
+  ADD COLUMN approval_status ENUM('pending', 'approved', 'denied') DEFAULT 'pending';
+`, (err, result) => {
+  if (err && err.code !== 'ER_DUP_FIELDNAME') {
+    console.error("Error updating database schema:", err.message);
+  } else {
+    console.log("Database schema updated successfully or already in desired state.");
+  }
+});
+
 // Start the server and listen on port 5000
 app.listen(5000, () => {
   console.log("Server is running on port 5000");
@@ -131,6 +143,7 @@ app.get("/quote", authenticateToken, (req, res) => {
   res.json({ message: "Welcome to the quote page. You are authenticated!" }); // Send a success message if authentication is valid
 });
 
+// Profile route
 app.get("/profile", authenticateToken, (req, res) => {
   const userId = req.user.userId; // Extract userId from the decoded JWT token
 
@@ -180,7 +193,7 @@ app.post("/add_quote", authenticateToken, (req, res) => {
 
   // Query the database to insert the quote request
   db.query(
-    "INSERT INTO quotes (cust_id, address, square_feet, price, picture_one, picture_two, picture_three, picture_four, picture_five, note) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+    "INSERT INTO quotes (cust_id, address, square_feet, price, picture_one, picture_two, picture_three, picture_four, picture_five, note, approval_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')",
     [
       cust_id,
       address,
@@ -205,10 +218,8 @@ app.post("/add_quote", authenticateToken, (req, res) => {
   );
 });
 
+// Fetch all quotes with approval_status
 app.get("/quotes", authenticateToken, (req, res) => {
-  console.log("Received request to /quotes endpoint");
-
-  // Query the database to get all items from the quotes table and join with the users table
   const query = `
     SELECT quotes.*, users.first, users.last, users.phone, users.email 
     FROM quotes 
@@ -216,39 +227,20 @@ app.get("/quotes", authenticateToken, (req, res) => {
   `;
   db.query(query, (err, result) => {
     if (err) {
-      console.error("Error fetching quotes:", err);
-      return res
-        .status(500)
-        .json({ message: "Error fetching quotes", error: err.message });
+      return res.status(500).json({ message: "Error fetching quotes", error: err.message });
     }
-
-    if (result.length === 0) {
-      console.log("No quotes found");
-      return res.status(404).json({ message: "No quotes found" }); // Send error if no quotes found
-    }
-
-    // Send quotes data as response
     res.json(result);
   });
 });
 
+// Fetch specific user's quotes
 app.get("/specific_quotes", authenticateToken, (req, res) => {
   const cust_id = req.user.userId;
 
-  // Query the database to get all items from the quotes table
   db.query("SELECT * FROM quotes WHERE cust_id=?", [cust_id], (err, result) => {
     if (err) {
-      console.error("Error fetching quotes:", err);
-      return res
-        .status(500)
-        .json({ message: "Error fetching quotes", error: err });
+      return res.status(500).json({ message: "Error fetching quotes", error: err });
     }
-
-    if (result.length === 0) {
-      return res.status(404).json({ message: "No quotes found" }); // Send error if no quotes found
-    }
-
-    // Send quotes data as response
     res.json(result);
   });
 });

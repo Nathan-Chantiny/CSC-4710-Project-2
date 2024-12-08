@@ -1,4 +1,3 @@
-// This is the content of the profile page
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from 'react-router-dom';
 import { jwtDecode } from "jwt-decode";
@@ -69,7 +68,7 @@ const Profile = () => {
         setSpecificQuotes(res.data);
       } catch (err) {
         console.error("Error fetching quotes:", err);
-        setError("Error fetching quotes. Please try again.");
+        // setError("Error fetching quotes. Please try again."); // commented out so we don't see errors in David Smith Profile
       }
     };
 
@@ -81,6 +80,16 @@ const Profile = () => {
   const handleLogout = () => {
     localStorage.removeItem("token"); // Remove the JWT token from localStorage
     navigate("/login"); // Redirect to login page
+  };
+
+  const handleApprove = (id) => {
+    console.log(`Quote ${id} approved`);
+    // You can add API logic here to mark the quote as approved
+  };
+
+  const handleDeny = (id) => {
+    console.log(`Quote ${id} denied`);
+    // You can add API logic here to mark the quote as denied
   };
 
   return (
@@ -158,14 +167,30 @@ const Profile = () => {
           <h2>Quotes</h2>
           {error && <p>{error}</p>}
           <div>
-            {quotes.map((quote) => (
+            {quotes.map((quote, index) => (
               <div key={quote.id} style={{ marginBottom: "20px" }}>
-                <h1 style={h1Style}>{quote.first} {quote.last} -{">"} {quote.phone}, {quote.email}{" "} </h1>
+                <h3>
+                  {index + 1}.
+                </h3>
+                <h1 style={h1Style}>{quote.first} {quote.last} -{">"} {quote.phone}, {quote.email}{" "}</h1>
                 <p>Address: {quote.address}</p>
                 <p>Square Feet: {quote.square_feet}</p>
                 <p>Price: {quote.price}</p>
-                <p>Note: {quote.note}</p>
-                {/* Add other fields as needed */}
+                <p>Approval Status: {quote.approval_status}</p> {/* Display approval status */}
+                <div>
+                  <button
+                    onClick={() => handleApprove(quote.id)}
+                    style={{ marginRight: "10px", padding: "5px 10px" }}
+                  >
+                    Approve
+                  </button>
+                  <button
+                    onClick={() => handleDeny(quote.id)}
+                    style={{ padding: "5px 10px" }}
+                  >
+                    Deny
+                  </button>
+                </div>
               </div>
             ))}
           </div>
@@ -191,14 +216,16 @@ const Profile = () => {
           <h2>Quotes</h2>
           {error && <p>{error}</p>}
           <div>
-            {specificQuotes.map((specificQuote) => (
+            {specificQuotes.map((specificQuote, index) => (
               <div key={specificQuote.id} style={{ marginBottom: "20px" }}>
-                <h1 style={h1Style}>0{specificQuote.id}</h1>
+                <h3>
+                  {index + 1}.
+                </h3>
+                <h3>{specificQuote.first} {specificQuote.last}</h3>
                 <p>Address: {specificQuote.address}</p>
                 <p>Square Feet: {specificQuote.square_feet}</p>
                 <p>Price: {specificQuote.price}</p>
-                <p>Note: {specificQuote.note}</p>
-                {/* Add other fields as needed */}
+                <p>Approval Status: {specificQuote.approval_status}</p> {/* Display approval status */}
               </div>
             ))}
           </div>
