@@ -199,7 +199,7 @@ const Profile = () => {
           marginBottom: "20px",
         }}
       >
-        Profile
+        {Strings.quoteName}
       </h2>
 
       {/* Navigation Menu */}
