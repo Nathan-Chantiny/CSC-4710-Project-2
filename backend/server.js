@@ -389,3 +389,48 @@ app.get("/specific_quotes", authenticateToken, (req, res) => {
     res.json(result);
   });
 });
+
+
+// Route to generate a bill
+app.post("/generate_bill", authenticateToken, (req, res) => {
+  const { quoteId } = req.body;
+  const userId = req.user.userId;
+
+  // Check if the user is David Smith
+  if (userId !== 0) { // 0 is the ID for David Smith
+    return res.status(403).json({ message: "Unauthorized action" });
+  }
+
+  // Find the order of work associated with the given QuoteRequestID
+  db.query(
+    "SELECT * FROM orderofwork WHERE QuoteRequestID = ?",
+    [quoteId],
+    (err, result) => {
+      if (err) {
+        console.error("Error fetching order of work:", err.message);
+        return res.status(500).json({ message: "Failed to fetch order of work", error: err.message });
+      }
+
+      if (result.length === 0) {
+        return res.status(404).json({ message: "Order of work not found" });
+      }
+
+      const { OrderID, AgreedPrice } = result[0];
+
+      // Insert the bill into the database
+      db.query(
+        "INSERT INTO bill (OrderID, Amount) VALUES (?, ?)",
+        [OrderID, AgreedPrice],
+        (err, result) => {
+          if (err) {
+            console.error("Error creating bill:", err.message);
+            return res.status(500).json({ message: "Failed to create bill", error: err.message });
+          }
+
+          console.log("Bill created successfully for OrderID:", OrderID);
+          res.status(201).json({ message: "Bill generated successfully" });
+        }
+      );
+    }
+  );
+});
