@@ -75,7 +75,7 @@ const HomePage = () => {
                     color: "#007bff",
                   }}
                 >
-                  {Strings.quoteName}
+                  {Strings.submitQuoteName}
                 </Link>
               </li>
             )}
@@ -89,7 +89,7 @@ const HomePage = () => {
                     color: "#007bff",
                   }}
                 >
-                  {Strings.profileName}
+                  {Strings.quoteName}
                 </Link>
               </li>
             )}

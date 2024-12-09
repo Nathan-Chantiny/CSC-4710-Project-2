@@ -235,7 +235,7 @@ const Profile = () => {
                   color: "#007bff",
                 }}
               >
-                {Strings.quoteName}
+                {Strings.submitQuoteName}
               </Link>
             </li>
           )}

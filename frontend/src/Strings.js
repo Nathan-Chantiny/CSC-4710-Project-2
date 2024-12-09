@@ -2,8 +2,8 @@ const strings = {
   billsName: "Bills",
   homePageName: "Home",
   loginName: "Login",
-  profileName: "Profile",
-  quoteName: "Quote",
+  quoteName: "Quotes",
+  submitQuoteName: "Submit a Quote",
   registerName: "Register",
   logoutName: "Logout",
 };

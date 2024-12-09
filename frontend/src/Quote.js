@@ -144,7 +144,7 @@ const Quote = () => {
                   color: "#007bff",
                 }}
               >
-                {Strings.profileName}
+                {Strings.quoteName}
               </Link>
             </li>
           )}
