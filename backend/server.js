@@ -233,17 +233,39 @@ app.get("/quotes", authenticateToken, (req, res) => {
   });
 });
 
-// Endpoint to update approval_status
-app.patch("/update_quote_status", authenticateToken, (req, res) => {
-  const { quoteId, approvalStatus } = req.body; // Extract the quote ID and new approval status
+// Endpoint to update quote approval
+app.patch("/quote_approve", authenticateToken, (req, res) => {
+  const { quoteId, approvalStatus, startDate, endDate, counterPrice } =
+    req.body; // Extract the quote ID and new approval status
 
   // Update the approval_status in the database
   db.query(
-    "UPDATE quotes SET approval_status = ? WHERE id = ?",
-    [approvalStatus, quoteId],
+    "UPDATE quotes SET approval_status = ?, start_date = ?, end_date = ?, cost = ? WHERE quote_id = ?",
+    [approvalStatus, startDate, endDate, counterPrice, quoteId],
     (err, result) => {
       if (err) {
-        return res.status(500).json({ message: "Failed to update status", error: err.message });
+        return res
+          .status(500)
+          .json({ message: "Failed to update status", error: err.message });
+      }
+      res.json({ message: "Status updated successfully" });
+    }
+  );
+});
+
+// Endpoint to update quote denial
+app.patch("/quote_deny", authenticateToken, (req, res) => {
+  const { quoteId, approvalStatus, denyReason } = req.body; // Extract the quote ID and new approval status
+
+  // Update the approval_status in the database
+  db.query(
+    "UPDATE quotes SET approval_status = ?, deny_reason = ? WHERE quote_id = ?",
+    [approvalStatus, denyReason, quoteId],
+    (err, result) => {
+      if (err) {
+        return res
+          .status(500)
+          .json({ message: "Failed to update status", error: err.message });
       }
       res.json({ message: "Status updated successfully" });
     }
@@ -251,7 +273,7 @@ app.patch("/update_quote_status", authenticateToken, (req, res) => {
 });
 
 // Endpoint to create an order of work
-app.post("/create_order_of_work", authenticateToken, (req, res) => {
+app.post("/offer_accept", authenticateToken, (req, res) => {
   const { quoteId, workPeriod, agreedPrice } = req.body;
 
   // Insert the order of work into the database
@@ -267,8 +289,47 @@ app.post("/create_order_of_work", authenticateToken, (req, res) => {
   );
 });
 
+// Endpoint to create an order of work
+app.patch("/offer_reject", authenticateToken, (req, res) => {
+  const { quoteId, price, note, approval_status, start_date, end_date } = req.body;
 
+  // Insert the order of work into the database
+  db.query(
+    "UPDATE quotes SET price = ?, note = ?, approval_status = ?, start_date = ?, end_date = ? WHERE quote_id = ?",
+    [price, note, approval_status, start_date, end_date, quoteId],
+    (err, result) => {
+      if (err) {
+        return res.status(500).json({
+          message: "Failed to update quote",
+          error: err.message,
+        });
+      }
+      res
+        .status(201)
+        .json({ message: "Quote updated successfully successfully" });
+    }
+  );
+});
 
+// Endpoint to delete a quote
+app.patch("/quote_delete", authenticateToken, (req, res) => {
+  const { quoteId } = req.body;
+
+  // Insert the order of work into the database
+  db.query(
+    "DELETE FROM quotes WHERE quote_id = ?",
+    [quoteId],
+    (err, result) => {
+      if (err) {
+        return res.status(500).json({
+          message: "Failed to delete quote",
+          error: err.message,
+        });
+      }
+      res.status(201).json({ message: "Quote deleted successfully" });
+    }
+  );
+});
 
 // Fetch specific user's quotes
 app.get("/specific_quotes", authenticateToken, (req, res) => {

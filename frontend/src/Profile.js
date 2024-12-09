@@ -85,43 +85,47 @@ const Profile = () => {
     const token = localStorage.getItem("token");
 
     // Prompt the user for start and end dates
+    const counterPrice = prompt("Enter cost for work:");
     const startDate = prompt("Enter the start date (YYYY-MM-DD):");
     const endDate = prompt("Enter the end date (YYYY-MM-DD):");
 
-    if (!startDate || !endDate) {
-      alert("Start date and end date are required.");
+    if (!startDate || !endDate || !counterPrice) {
+      if (!startDate) {
+        alert("Start date is required.");
+      } else if (!endDate) {
+        alert("End date is required.");
+      } else if (!counterPrice) {
+        alert("Cost is required.");
+      }
       return;
     }
 
     try {
       // Update quote approval status
       await axios.patch(
-        "http://localhost:5000/update_quote_status",
-        { quoteId, approvalStatus: "approved" },
+        "http://localhost:5000/quote_approve",
+        { quoteId, approvalStatus: "approved", startDate, endDate, counterPrice },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      // Create the order of work
-      await axios.post(
-        "http://localhost:5000/create_order_of_work",
-        { quoteId, workPeriod: `${startDate} to ${endDate}`, agreedPrice: price },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      alert("Quote approved and order of work created!");
+      alert("Quote approved!");
       window.location.reload(); // Reload to fetch the updated quotes
     } catch (err) {
-      console.error("Error approving quote or creating order of work:", err.message);
+      console.error("Error approving quote:", err.message);
       alert("Failed to process the quote approval. Please try again.");
     }
   };
 
   const handleDeny = async (quoteId) => {
     const token = localStorage.getItem("token");
+
+    // Prompt the user for start and end dates
+    const denyReason = prompt("Enter reason for denial:");
+
     try {
       await axios.patch(
-        "http://localhost:5000/update_quote_status",
-        { quoteId, approvalStatus: "denied" },
+        "http://localhost:5000/quote_deny",
+        { quoteId, approvalStatus: "denied", denyReason },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       alert("Quote denied!");
@@ -129,6 +133,54 @@ const Profile = () => {
     } catch (err) {
       console.error("Error denying quote:", err.message);
       alert("Failed to deny the quote. Please try again.");
+    }
+  };
+
+  const handleAccept = async (quoteId, price) => {
+    const token = localStorage.getItem("token");
+
+    try {
+      // Create the order of work
+      await axios.post(
+        "http://localhost:5000/offer_accept",
+        { quoteId, price },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      alert("Order of work created!");
+      window.location.reload(); // Reload to fetch the updated quotes
+    } catch (err) {
+      console.error(
+        "Error creating order of work:",
+        err.message
+      );
+      alert("Failed to create order of work. Please try again.");
+    }
+  };
+
+  const handleRequoteNavigaton = async (quoteId) => {
+    try {
+      const data = { quoteId };
+      navigate("/requote", { state: data }); // Passing data via state
+    } catch (err) {
+      console.error("Error:", err.message);
+      alert("There was an error going to /requote.");
+    }
+  };
+
+  const handleDelete = async (quoteId) => {
+    const token = localStorage.getItem("token");
+    try {
+      await axios.patch(
+        "http://localhost:5000/quote_delete",
+        { quoteId },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      alert("Quote deleted!");
+      window.location.reload(); // Reload to fetch the updated quotes
+    } catch (err) {
+      console.error("Error deleting quote:", err.message);
+      alert("Failed to delete the quote. Please try again.");
     }
   };
 
@@ -217,16 +269,17 @@ const Profile = () => {
                 <p>Square Feet: {quote.square_feet}</p>
                 <p>Price: {quote.price}</p>
                 <p>Note: {quote.note}</p>
-                <p>Approval Status: {quote.approval_status}</p> {/* Display approval status */}
+                <p>Approval Status: {quote.approval_status}</p>{" "}
+                {/* Display approval status */}
                 <div>
                   <button
-                    onClick={() => handleApprove(quote.id, quote.price)}
+                    onClick={() => handleApprove(quote.quote_id, quote.price)}
                     style={{ marginRight: "10px", padding: "5px 10px" }}
                   >
                     Approve
                   </button>
                   <button
-                    onClick={() => handleDeny(quote.id)}
+                    onClick={() => handleDeny(quote.quote_id)}
                     style={{ padding: "5px 10px" }}
                   >
                     Deny
@@ -268,6 +321,56 @@ const Profile = () => {
                 <p>Price: {specificQuote.price}</p>
                 <p>Note: {specificQuote.note}</p>
                 <p>Approval Status: {specificQuote.approval_status}</p>
+                {specificQuote.start_date != null && (
+                  <p>
+                    Proposed start date:{" "}
+                    {new Date(specificQuote.start_date).toLocaleDateString()}
+                  </p>
+                )}
+                {specificQuote.end_date != null && (
+                  <p>
+                    Proposed end date:{" "}
+                    {new Date(specificQuote.end_date).toLocaleDateString()}
+                  </p>
+                )}
+                {specificQuote.cost !== null && (
+                  <p>Proposed cost: {specificQuote.cost}</p>
+                )}
+                {specificQuote.deny_reason !== null && (
+                  <p>Reason for denial: {specificQuote.deny_reason}</p>
+                )}
+                {/* Display approval status */}
+                <div>
+                  {specificQuote.approval_status === "approved" && (
+                    <button
+                      onClick={() =>
+                        handleAccept(
+                          specificQuote.quote_id,
+                          specificQuote.price
+                        )
+                      }
+                      style={{ marginRight: "10px", padding: "5px 10px" }}
+                    >
+                      Accept
+                    </button>
+                  )}
+                  {specificQuote.approval_status === "approved" && (
+                    <button
+                      onClick={() => handleRequoteNavigaton(specificQuote.quote_id)}
+                      style={{ padding: "5px 10px" }}
+                    >
+                      Reject
+                    </button>
+                  )}
+                  {specificQuote.approval_status === "denied" && (
+                    <button
+                      onClick={() => handleDelete(specificQuote.quote_id)}
+                      style={{ padding: "5px 10px" }}
+                    >
+                      Delete
+                    </button>
+                  )}
+                </div>
               </div>
             ))}
           </div>
