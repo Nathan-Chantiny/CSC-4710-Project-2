@@ -29,18 +29,6 @@ db.connect((err) => {
   console.log("Connected to MySQL database.");
 });
 
-// Modify the quotes table schema to include approval_status column
-db.query(`
-  ALTER TABLE quotes
-  ADD COLUMN approval_status ENUM('pending', 'approved', 'denied') DEFAULT 'pending';
-`, (err, result) => {
-  if (err && err.code !== 'ER_DUP_FIELDNAME') {
-    console.error("Error updating database schema:", err.message);
-  } else {
-    console.log("Database schema updated successfully or already in desired state.");
-  }
-});
-
 // Start the server and listen on port 5000
 app.listen(5000, () => {
   console.log("Server is running on port 5000");
@@ -176,20 +164,6 @@ app.post("/add_quote", authenticateToken, (req, res) => {
     picture_five,
     note,
   } = req.body; // Extract all required fields from request body
-
-  // Debugging logs
-  console.log("Received add_quote request with data:", {
-    cust_id,
-    address,
-    square_feet,
-    price,
-    picture_one,
-    picture_two,
-    picture_three,
-    picture_four,
-    picture_five,
-    note,
-  });
 
   // Query the database to insert the quote request
   db.query(
