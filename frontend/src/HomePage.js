@@ -96,6 +96,20 @@ const HomePage = () => {
             {token && (
               <li>
                 <Link
+                  to="/orders"
+                  style={{
+                    textDecoration: "none",
+                    fontSize: "1.2rem",
+                    color: "#007bff",
+                  }}
+                >
+                  {Strings.ordersName}
+                </Link>
+              </li>
+            )}
+            {token && (
+              <li>
+                <Link
                   to="/bills"
                   style={{
                     textDecoration: "none",

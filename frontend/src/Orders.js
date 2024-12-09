@@ -24,7 +24,9 @@ const HomePage = () => {
     >
       {/* Header */}
       <header style={{ textAlign: "center", marginBottom: "30px" }}>
-        <h1 style={{ fontSize: "2.5rem", color: "#333" }}>Bills</h1>
+        <h1 style={{ fontSize: "2.5rem", color: "#333" }}>
+          {Strings.ordersName}
+        </h1>
         <nav style={{ marginTop: "20px" }}>
           <ul
             style={{
@@ -78,14 +80,14 @@ const HomePage = () => {
             {token && (
               <li>
                 <Link
-                  to="/orders"
+                  to="/bills"
                   style={{
                     textDecoration: "none",
                     fontSize: "1.2rem",
                     color: "#007bff",
                   }}
                 >
-                  {Strings.ordersName}
+                  {Strings.billsName}
                 </Link>
               </li>
             )}

@@ -7,6 +7,7 @@ import Quote from "./Quote";  // Importing the Quote component
 import Profile from './Profile';  // Importing the Profile component
 import Requote from './Requote';  // Importing the Requote component
 import Bills from './Bills';  // Importing the Requote component
+import Orders from './Orders';  // Importing the Requote component
 import PrivateRoute from './PrivateRoute';  // Importing the PrivateRoute component for protected routes
 
 function App() {
@@ -20,7 +21,6 @@ function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-
         {/* Private Routes */}
         <Route
           path="/quote"
@@ -51,6 +51,14 @@ function App() {
           element={
             <PrivateRoute>
               <Bills />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/orders"
+          element={
+            <PrivateRoute>
+              <Orders />
             </PrivateRoute>
           }
         />

@@ -151,6 +151,20 @@ const Quote = () => {
           {localStorage.getItem("token") && (
             <li>
               <Link
+                to="/orders"
+                style={{
+                  textDecoration: "none",
+                  fontSize: "1.2rem",
+                  color: "#007bff",
+                }}
+              >
+                {Strings.ordersName}
+              </Link>
+            </li>
+          )}
+          {localStorage.getItem("token") && (
+            <li>
+              <Link
                 to="/bills"
                 style={{
                   textDecoration: "none",

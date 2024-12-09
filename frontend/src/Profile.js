@@ -199,7 +199,7 @@ const Profile = () => {
           marginBottom: "20px",
         }}
       >
-        Profile
+        {Strings.quoteName}
       </h2>
 
       {/* Navigation Menu */}
@@ -236,6 +236,20 @@ const Profile = () => {
                 }}
               >
                 {Strings.submitQuoteName}
+              </Link>
+            </li>
+          )}
+          {localStorage.getItem("token") && (
+            <li>
+              <Link
+                to="/orders"
+                style={{
+                  textDecoration: "none",
+                  fontSize: "1.2rem",
+                  color: "#007bff",
+                }}
+              >
+                {Strings.ordersName}
               </Link>
             </li>
           )}

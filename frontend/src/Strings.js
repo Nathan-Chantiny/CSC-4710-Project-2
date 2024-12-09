@@ -6,6 +6,7 @@ const strings = {
   submitQuoteName: "Submit a Quote",
   registerName: "Register",
   logoutName: "Logout",
+  ordersName: "Orders",
 };
 
 export default strings;
