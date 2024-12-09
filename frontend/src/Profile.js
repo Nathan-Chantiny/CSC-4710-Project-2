@@ -18,6 +18,7 @@ const getUserIdFromToken = () => {
 
 const Profile = () => {
   const navigate = useNavigate();
+  const [filterStatus, setFilterStatus] = useState("all");
   const userId = getUserIdFromToken(); // Extract the user ID from the JWT token
   const [userData, setUserData] = useState({ first: "", last: "" });
   const [quotes, setQuotes] = useState([]);
@@ -136,14 +137,14 @@ const Profile = () => {
     }
   };
 
-  const handleAccept = async (quoteId, price) => {
+  const handleAccept = async (quoteId) => {
     const token = localStorage.getItem("token");
 
     try {
       // Create the order of work
       await axios.post(
         "http://localhost:5000/offer_accept",
-        { quoteId, price },
+        { quoteId },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -258,8 +259,27 @@ const Profile = () => {
           </h3>
           <h2>Quotes</h2>
           {error && <p>{error}</p>}
+          <div style={{ marginBottom: "20px", textAlign: "center" }}>
+            <label htmlFor="filter" style={{ marginRight: "10px" }}>
+              Filter by Status:
+            </label>
+            <select
+              id="filter"
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              style={{ padding: "5px 10px" }}
+            >
+              <option value="all">All</option>
+              <option value="accepted">Accepted</option>
+              <option value="rejected">Rejected</option>
+              <option value="pending">Pending</option>
+              <option value="in progress">In Progress</option>
+            </select>
+          </div>
           <div>
-            {quotes.map((quote, index) => (
+            {quotes
+              .filter((quote) => filterStatus === "all" || quote.approval_status === filterStatus)
+              .map((quote, index) => (
               <div key={quote.id} style={{ marginBottom: "20px" }}>
                 <h3>{index + 1}.</h3>
                 <h1 style={h1Style}>
@@ -272,18 +292,22 @@ const Profile = () => {
                 <p>Approval Status: {quote.approval_status}</p>{" "}
                 {/* Display approval status */}
                 <div>
-                  <button
-                    onClick={() => handleApprove(quote.quote_id, quote.price)}
-                    style={{ marginRight: "10px", padding: "5px 10px" }}
-                  >
-                    Approve
-                  </button>
-                  <button
-                    onClick={() => handleDeny(quote.quote_id)}
-                    style={{ padding: "5px 10px" }}
-                  >
-                    Deny
-                  </button>
+                  {quote.approval_status === "pending" && (
+                    <button
+                      onClick={() => handleApprove(quote.quote_id, quote.price)}
+                      style={{ marginRight: "10px", padding: "5px 10px" }}
+                    >
+                      Approve
+                    </button>
+                  )}
+                  {quote.approval_status === "pending" && (
+                    <button
+                      onClick={() => handleDeny(quote.quote_id)}
+                      style={{ marginRight: "10px", padding: "5px 10px" }}
+                    >
+                      Deny
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
@@ -309,8 +333,27 @@ const Profile = () => {
           </h3>
           <h2>Quotes</h2>
           {error && <p>{error}</p>}
+          <div style={{ marginBottom: "20px", textAlign: "center" }}>
+            <label htmlFor="filter" style={{ marginRight: "10px" }}>
+              Filter by Status:
+            </label>
+            <select
+              id="filter"
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              style={{ padding: "5px 10px" }}
+            >
+              <option value="all">All</option>
+              <option value="accepted">Accepted</option>
+              <option value="rejected">Rejected</option>
+              <option value="pending">Pending</option>
+              <option value="in progress">In Progress</option>
+            </select>
+          </div>
           <div>
-            {specificQuotes.map((specificQuote, index) => (
+            {specificQuotes
+              .filter((quote) => filterStatus === "all" || quote.approval_status === filterStatus)
+              .map((specificQuote, index) => (
               <div key={specificQuote.id} style={{ marginBottom: "20px" }}>
                 <h3>{index + 1}.</h3>
                 <h3>
@@ -356,7 +399,9 @@ const Profile = () => {
                   )}
                   {specificQuote.approval_status === "approved" && (
                     <button
-                      onClick={() => handleRequoteNavigaton(specificQuote.quote_id)}
+                      onClick={() =>
+                        handleRequoteNavigaton(specificQuote.quote_id)
+                      }
                       style={{ padding: "5px 10px" }}
                     >
                       Reject

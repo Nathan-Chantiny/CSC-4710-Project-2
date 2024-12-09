@@ -248,17 +248,90 @@ app.patch("/quote_deny", authenticateToken, (req, res) => {
 
 // Endpoint to create an order of work
 app.post("/offer_accept", authenticateToken, (req, res) => {
-  const { quoteId, workPeriod, agreedPrice } = req.body;
+  const { quoteId } = req.body;
 
-  // Insert the order of work into the database
+  // Fetch specific columns from the quotes table
   db.query(
-    "INSERT INTO orderofwork (QuoteRequestID, WorkPeriod, AgreedPrice, Status) VALUES (?, ?, ?, 'Pending')",
-    [quoteId, workPeriod, agreedPrice],
+    "SELECT price, cost, start_date, end_date FROM quotes WHERE quote_id = ?",
+    [quoteId],
     (err, result) => {
       if (err) {
-        return res.status(500).json({ message: "Failed to create order of work", error: err.message });
+        console.error("Error fetching quote details:", err.message);
+        return res
+          .status(500)
+          .json({
+            message: "Error fetching quote details",
+            error: err.message,
+          });
       }
-      res.status(201).json({ message: "Order of work created successfully" });
+
+      if (result.length === 0) {
+        return res.status(404).json({ message: "Quote not found" });
+      }
+
+      // Extract the specific columns
+      const { price, cost, start_date, end_date } = result[0];
+      const workPeriod = `${start_date} to ${end_date}`;
+      const agreedPrice = cost || price;
+
+      // Insert the order of work into the database
+      db.query(
+        "INSERT INTO orderofwork (QuoteRequestID, WorkPeriod, AgreedPrice, Status) VALUES (?, ?, ?, 'Pending')",
+        [quoteId, workPeriod, agreedPrice],
+        (err, result) => {
+          if (err) {
+            console.error("Error creating order of work:", err.message);
+            return res
+              .status(500)
+              .json({
+                message: "Failed to create order of work",
+                error: err.message,
+              });
+          }
+
+          console.log(
+            "Order of work created successfully for quoteId:",
+            quoteId
+          );
+
+          // Update the approval_status in the quotes table
+          db.query(
+            "UPDATE quotes SET approval_status = 'in progress' WHERE quote_id = ?",
+            [quoteId],
+            (err, result) => {
+              if (err) {
+                console.error("Error updating approval_status:", err.message);
+                return res
+                  .status(500)
+                  .json({
+                    message: "Failed to update approval status",
+                    error: err.message,
+                  });
+              }
+
+              if (result.affectedRows === 0) {
+                console.error("No rows updated for approval_status.");
+                return res
+                  .status(404)
+                  .json({
+                    message: "Quote not found or approval status already set",
+                  });
+              }
+
+              console.log(
+                "Approval status updated successfully for quoteId:",
+                quoteId
+              );
+
+              // Final response after all operations succeed
+              res.status(201).json({
+                message:
+                  "Order of work created and quote status updated successfully",
+              });
+            }
+          );
+        }
+      );
     }
   );
 });
@@ -316,5 +389,3 @@ app.get("/specific_quotes", authenticateToken, (req, res) => {
     res.json(result);
   });
 });
-
-
