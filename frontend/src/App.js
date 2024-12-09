@@ -16,18 +16,20 @@ function App() {
       {/* BrowserRouter provides the routing context to the application */}
       <Routes>
         {" "}
-        {/* Defines the routing paths for the application */}
-        {/* Public routes */}
-        {/* Route for HomePage (accessible to everyone) */}
+        {/* Public Routes */}
         <Route path="/" element={<HomePage />} />
-        {/* Route for Login (accessible to everyone) */}
         <Route path="/login" element={<Login />} />
-        {/* Route for Register (accessible to everyone) */}
         <Route path="/register" element={<Register />} />
-        {/* Private routes */}
-        {/* Dashboard route, protected by PrivateRoute (only accessible if authenticated) */}
-        <Route path="/quote" element={<Quote />} />
-        {/* Profile route, protected by PrivateRoute (only accessible if authenticated) */}
+
+        {/* Private Routes */}
+        <Route
+          path="/quote"
+          element={
+            <PrivateRoute>
+              <Quote />
+            </PrivateRoute>
+          }
+        />
         <Route
           path="/profile"
           element={

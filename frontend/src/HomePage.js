@@ -24,7 +24,7 @@ const HomePage = () => {
       {/* Header */}
       <header style={{ textAlign: "center", marginBottom: "30px" }}>
         <h1 style={{ fontSize: "2.5rem", color: "#333" }}>
-          Welcome to the JWT Tutorial Home Page
+          David Smiths Driveway Sealing
         </h1>
         <nav style={{ marginTop: "20px" }}>
           <ul
@@ -48,18 +48,20 @@ const HomePage = () => {
                 Login
               </Link>
             </li>
-            <li>
-              <Link
-                to="/register"
-                style={{
-                  textDecoration: "none",
-                  fontSize: "1.2rem",
-                  color: "#007bff",
-                }}
-              >
-                Register
-              </Link>
-            </li>
+            {!localStorage.getItem("token") && (
+              <li>
+                <Link
+                  to="/register"
+                  style={{
+                    textDecoration: "none",
+                    fontSize: "1.2rem",
+                    color: "#007bff",
+                  }}
+                >
+                  Register
+                </Link>
+              </li>
+            )}
             {token && (
               <li>
                 <Link
@@ -120,7 +122,7 @@ const HomePage = () => {
         </nav>
       </header>
 
-      {/* Session Information Paragraph */}
+      {/* Short intro to David Smith's business */}
       <section style={{ marginBottom: "30px" }}>
         <h2
           style={{
@@ -130,148 +132,85 @@ const HomePage = () => {
             marginBottom: "20px",
           }}
         >
-          Understanding Sessions: Stateful vs. Stateless
+          David Smith's Driveway Sealing
         </h2>
         <p style={{ fontSize: "1.2rem", color: "#555", textAlign: "justify" }}>
-          A session is a temporary connection between a user and a system,
-          allowing the system to remember the user's activity. In a stateful
-          session, the server keeps track of the user's session by storing
-          information on the server side, using a session ID to recognize the
-          user with each request. On the other hand, in a stateless session, the
-          server does not store any session data. Instead, the user's data, such
-          as authentication information, is stored on the client side in a
-          token, like a JSON Web Token (JWT), which is sent with each request.
-          APIs typically use stateless sessions for scalability and simplicity,
-          since no session data is stored on the server.
+          David Smith's Driveway Sealing is a locally owned and operated
+          business specializing in premium driveway maintenance and sealing
+          services. With over a decade of experience, David and his team are
+          dedicated to helping homeowners and businesses protect and enhance the
+          appearance of their driveways.
+        </p>
+
+        <h2
+          style={{
+            fontSize: "2rem",
+            color: "#007bff",
+            textAlign: "center",
+            marginBottom: "20px",
+          }}
+        >
+          Services Offered:
+        </h2>
+        <ul>
+          <li style={{ fontSize: "1.2rem", color: "#555", textAlign: "justify" }}>
+            <strong>Sealcoating:</strong> Protect your driveway from cracks, UV
+            damage, and water penetration with high-quality sealants.
+          </li>
+          <li style={{ fontSize: "1.2rem", color: "#555", textAlign: "justify" }}>
+            <strong>Crack Filling:</strong> Extend the life of your driveway by
+            sealing cracks to prevent further damage.
+          </li>
+          <li style={{ fontSize: "1.2rem", color: "#555", textAlign: "justify" }}>
+            <strong>Line Striping:</strong> Precision line striping for
+            commercial properties to ensure safety and curb appeal.
+          </li>
+          <li style={{ fontSize: "1.2rem", color: "#555", textAlign: "justify" }}>
+            <strong>Pothole Repair:</strong> Efficient and durable repairs for
+            potholes caused by wear and weather.
+          </li>
+        </ul>
+
+        <h2
+          style={{
+            fontSize: "2rem",
+            color: "#007bff",
+            textAlign: "center",
+            marginBottom: "20px",
+          }}
+        >
+          Why Choose Us?
+        </h2>
+        <ul>
+          <li style={{ fontSize: "1.2rem", color: "#555", textAlign: "justify" }}>
+            <strong>Expert Craftsmanship:</strong> Every job is completed with
+            meticulous attention to detail.
+          </li>
+          <li style={{ fontSize: "1.2rem", color: "#555", textAlign: "justify" }}>
+            <strong>Top-Quality Materials:</strong> We use industry-leading
+            products for long-lasting results.
+          </li>
+          <li style={{ fontSize: "1.2rem", color: "#555", textAlign: "justify" }}>
+            <strong>Affordable Pricing:</strong> Competitive rates with no
+            hidden fees.
+          </li>
+          <li style={{ fontSize: "1.2rem", color: "#555", textAlign: "justify" }}>
+            <strong>Customer-Centric Service:</strong> We prioritize your
+            satisfaction, offering free consultations and flexible scheduling.
+          </li>
+        </ul>
+
+        <p style={{ fontSize: "1.2rem", color: "#555", textAlign: "justify" }}>
+          Whether it’s a residential driveway or a large commercial lot,
+          <strong> David Smith's Driveway Sealing</strong> provides the
+          expertise and care to keep your surfaces smooth, safe, and looking
+          their best. Contact us today for a free estimate and let us help you
+          protect your investment!
         </p>
       </section>
 
       {/* Main Content */}
       <main>
-        {/* JWT Tutorial Section */}
-        <section style={{ marginBottom: "40px" }}>
-          <h2
-            style={{
-              fontSize: "2rem",
-              color: "#007bff",
-              textAlign: "center",
-              marginBottom: "20px",
-            }}
-          >
-            What is JWT (JSON Web Token)?
-          </h2>
-          <p
-            style={{ fontSize: "1.2rem", color: "#555", textAlign: "justify" }}
-          >
-            JSON Web Token (JWT) is an open standard (RFC 7519) that defines a
-            compact, URL-safe means of representing claims to be transferred
-            between two parties. The claims in a JWT are encoded as a JSON
-            object that is used for securely transmitting information between
-            parties. JWTs are commonly used for **authentication** in web
-            applications.
-          </p>
-          <p
-            style={{ fontSize: "1.2rem", color: "#555", textAlign: "justify" }}
-          >
-            A JWT is composed of three parts:
-          </p>
-          <ul
-            style={{ fontSize: "1.2rem", color: "#555", marginBottom: "20px" }}
-          >
-            <li>
-              <strong>Header</strong>: Contains metadata such as the type of
-              token and signing algorithm used (e.g., HMAC SHA256).
-            </li>
-            <li>
-              <strong>Payload</strong>: Contains the claims or data being
-              transmitted (e.g., user information like ID, username).
-            </li>
-            <li>
-              <strong>Signature</strong>: Used to verify that the token wasn’t
-              tampered with. It's created by taking the encoded header, encoded
-              payload, a secret, and the algorithm specified in the header.
-            </li>
-          </ul>
-        </section>
-
-        {/* How JWT Works Section with Image */}
-        <section style={{ marginBottom: "40px" }}>
-          <h2
-            style={{
-              fontSize: "2rem",
-              color: "#007bff",
-              textAlign: "center",
-              marginBottom: "20px",
-            }}
-          >
-            How JWT Works
-          </h2>
-          <p
-            style={{ fontSize: "1.2rem", color: "#555", textAlign: "justify" }}
-          >
-            Here’s a step-by-step breakdown of how JWT works in the context of
-            authentication:
-          </p>
-          <ul
-            style={{ fontSize: "1.2rem", color: "#555", marginBottom: "20px" }}
-          >
-            <li>
-              <strong>Step 1: User Login</strong> - The user enters their
-              credentials (username and password) and submits them to the server
-              via a login form.
-            </li>
-            <li>
-              <strong>Step 2: Server Generates JWT</strong> - If the credentials
-              are valid, the server generates a JWT and sends it back to the
-              client.
-            </li>
-            <li>
-              <strong>Step 3: Client Stores JWT</strong> - The client (browser
-              or app) stores the JWT, usually in **localStorage** or
-              **sessionStorage**.
-            </li>
-            <li>
-              <strong>Step 4: Client Sends JWT</strong> - For each subsequent
-              request to a protected route, the client sends the JWT in the
-              **Authorization** header.
-            </li>
-            <li>
-              <strong>Step 5: Server Verifies JWT</strong> - The server verifies
-              the JWT using a secret key. If valid, the server processes the
-              request and returns the response. If invalid or expired, the user
-              is denied access.
-            </li>
-          </ul>
-
-          {/* JWT Workflow Image */}
-          <div style={{ textAlign: "center", marginBottom: "20px" }}>
-            <figure>
-              <img
-                src="/jwtworkflow.jpeg"
-                alt="JWT Workflow Diagram"
-                style={{ maxWidth: "100%", height: "auto" }}
-              />
-              <figcaption
-                style={{
-                  marginTop: "10px",
-                  fontStyle: "italic",
-                  color: "#666",
-                }}
-              >
-                JWT Workflow Diagram. Image source:{" "}
-                <a
-                  href="https://www.wallarm.com/what/oauth-vs-jwt-detailed-comparison"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Wallarm
-                </a>
-                .
-              </figcaption>
-            </figure>
-          </div>
-        </section>
-
         {/* Project Overview Section */}
         <section style={{ marginBottom: "40px" }}>
           <h2
@@ -287,37 +226,40 @@ const HomePage = () => {
           <p
             style={{ fontSize: "1.2rem", color: "#555", textAlign: "justify" }}
           >
-            This project is a simple demonstration of stateless authentication
-            using JWT. It includes:
+            This project is a simple demonstration of a website that can be used
+            to request quotes for driveway sealing services. It is built using
+            React for the frontend and Node.js with Express for the backend. The
+            project uses JWT for authentication and authorization of users.
           </p>
           <ul
             style={{ fontSize: "1.2rem", color: "#555", marginBottom: "20px" }}
           >
             <li>
-              **Home Page**: This public page provides an overview of JWT and
-              explains how it works.
+              **Home Page**: This public page provides an overview of David
+              Smiths Driveway Sealing services.
             </li>
             <li>
               **Login**: Users can log in and receive a JWT, which is stored in
-              the browser.
-            </li>
-            <li>**Register**: New users can register and create an account.</li>
-            <li>
-              **Dashboard**: A protected page that can only be accessed with a
-              valid JWT.
+              the browser. Once logged in, users can access protected routes.
             </li>
             <li>
-              **Profile Page**: Another protected page that displays user
-              information and can only be accessed with a valid JWT.
+              **Register**: New users can register and create an account. Users
+              are asked to add basic information.
             </li>
+            <li>
+              **Quote**: A protected page that can only be accessed with a valid
+              JWT. Allows users to submit quotes.
+            </li>
+            <li>
+              **Profile**: Allows users to view their submitted quotes and for
+              David Smith to see all user submitted quotes.
+            </li>
+            <li>
+              **Bills**: Allows users to view their bills and for David Smith to
+              view all bills submitted to customers.
+            </li>
+            <li>**Logout**: Logs users out and revokes their token.</li>
           </ul>
-          <p
-            style={{ fontSize: "1.2rem", color: "#555", textAlign: "justify" }}
-          >
-            The project helps developers understand how stateless authentication
-            works using JWT and how it can be implemented in modern web
-            applications.
-          </p>
         </section>
       </main>
 
