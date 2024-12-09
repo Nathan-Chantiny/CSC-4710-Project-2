@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import axios from "axios";
 import { Link, useNavigate } from 'react-router-dom';
 import { jwtDecode } from "jwt-decode";
+import Strings from "./Strings";
 
 const Quote = () => {
   const [address, setAddress] = useState("");
@@ -122,28 +123,59 @@ const Quote = () => {
           }}
         >
           <li>
-            <Link to="/" style={menuLinkStyle}>
-              Home
-            </Link>
-          </li>
-          <li>
-            <Link to="/profile" style={menuLinkStyle}>
-              Profile
-            </Link>
-          </li>
-          <li>
-            <button
-              onClick={handleLogout}
+            <Link
+              to="/"
               style={{
-                ...menuLinkStyle, // Apply the same menu style to the logout button
-                background: "#f5f5f5",
-                border: "none",
-                cursor: "pointer",
+                textDecoration: "none",
+                fontSize: "1.2rem",
+                color: "#007bff",
               }}
             >
-              Logout
-            </button>
+              {Strings.homePageName}
+            </Link>
           </li>
+          {localStorage.getItem("token") && (
+            <li>
+              <Link
+                to="/profile"
+                style={{
+                  textDecoration: "none",
+                  fontSize: "1.2rem",
+                  color: "#007bff",
+                }}
+              >
+                {Strings.profileName}
+              </Link>
+            </li>
+          )}
+          {localStorage.getItem("token") && (
+            <li>
+              <Link
+                to="/bills"
+                style={{
+                  textDecoration: "none",
+                  fontSize: "1.2rem",
+                  color: "#007bff",
+                }}
+              >
+                {Strings.billsName}
+              </Link>
+            </li>
+          )}
+          {localStorage.getItem("token") && (
+            <li>
+              <button
+                onClick={handleLogout}
+                style={{
+                  textDecoration: "none",
+                  fontSize: "1.2rem",
+                  color: "#007bff",
+                }}
+              >
+                {Strings.logoutName}
+              </button>
+            </li>
+          )}
         </ul>
       </nav>
 

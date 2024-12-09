@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
+import Strings from "./Strings";
 
 const Register = () => {
   const [first, setFirst] = useState("");
@@ -72,15 +73,31 @@ const Register = () => {
           }}
         >
           <li>
-            <Link to="/" style={menuLinkStyle}>
-              Home
+            <Link
+              to="/"
+              style={{
+                textDecoration: "none",
+                fontSize: "1.2rem",
+                color: "#007bff",
+              }}
+            >
+              {Strings.homePageName}
             </Link>
           </li>
-          <li>
-            <Link to="/login" style={menuLinkStyle}>
-              Login
-            </Link>
-          </li>
+          {!localStorage.getItem("token") && (
+            <li>
+              <Link
+                to="/login"
+                style={{
+                  textDecoration: "none",
+                  fontSize: "1.2rem",
+                  color: "#007bff",
+                }}
+              >
+                {Strings.loginName}
+              </Link>
+            </li>
+          )}
         </ul>
       </nav>
 

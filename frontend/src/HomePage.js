@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link, useNavigate } from "react-router-dom";
+import Strings from "./Strings";
 
 const HomePage = () => {
   const token = localStorage.getItem('token'); // Check if the user is logged in
@@ -36,18 +37,20 @@ const HomePage = () => {
               gap: "20px",
             }}
           >
-            <li>
-              <Link
-                to="/login"
-                style={{
-                  textDecoration: "none",
-                  fontSize: "1.2rem",
-                  color: "#007bff",
-                }}
-              >
-                Login
-              </Link>
-            </li>
+            {!localStorage.getItem("token") && (
+              <li>
+                <Link
+                  to="/login"
+                  style={{
+                    textDecoration: "none",
+                    fontSize: "1.2rem",
+                    color: "#007bff",
+                  }}
+                >
+                  {Strings.loginName}
+                </Link>
+              </li>
+            )}
             {!localStorage.getItem("token") && (
               <li>
                 <Link
@@ -58,7 +61,7 @@ const HomePage = () => {
                     color: "#007bff",
                   }}
                 >
-                  Register
+                  {Strings.registerName}
                 </Link>
               </li>
             )}
@@ -72,7 +75,7 @@ const HomePage = () => {
                     color: "#007bff",
                   }}
                 >
-                  Quote
+                  {Strings.quoteName}
                 </Link>
               </li>
             )}
@@ -86,7 +89,7 @@ const HomePage = () => {
                     color: "#007bff",
                   }}
                 >
-                  Profile
+                  {Strings.profileName}
                 </Link>
               </li>
             )}
@@ -100,7 +103,7 @@ const HomePage = () => {
                     color: "#007bff",
                   }}
                 >
-                  Bills
+                  {Strings.billsName}
                 </Link>
               </li>
             )}
@@ -114,7 +117,7 @@ const HomePage = () => {
                     color: "#007bff",
                   }}
                 >
-                  Logout
+                  {Strings.logoutName}
                 </button>
               </li>
             )}
@@ -153,19 +156,27 @@ const HomePage = () => {
           Services Offered:
         </h2>
         <ul>
-          <li style={{ fontSize: "1.2rem", color: "#555", textAlign: "justify" }}>
+          <li
+            style={{ fontSize: "1.2rem", color: "#555", textAlign: "justify" }}
+          >
             <strong>Sealcoating:</strong> Protect your driveway from cracks, UV
             damage, and water penetration with high-quality sealants.
           </li>
-          <li style={{ fontSize: "1.2rem", color: "#555", textAlign: "justify" }}>
+          <li
+            style={{ fontSize: "1.2rem", color: "#555", textAlign: "justify" }}
+          >
             <strong>Crack Filling:</strong> Extend the life of your driveway by
             sealing cracks to prevent further damage.
           </li>
-          <li style={{ fontSize: "1.2rem", color: "#555", textAlign: "justify" }}>
+          <li
+            style={{ fontSize: "1.2rem", color: "#555", textAlign: "justify" }}
+          >
             <strong>Line Striping:</strong> Precision line striping for
             commercial properties to ensure safety and curb appeal.
           </li>
-          <li style={{ fontSize: "1.2rem", color: "#555", textAlign: "justify" }}>
+          <li
+            style={{ fontSize: "1.2rem", color: "#555", textAlign: "justify" }}
+          >
             <strong>Pothole Repair:</strong> Efficient and durable repairs for
             potholes caused by wear and weather.
           </li>
@@ -182,19 +193,27 @@ const HomePage = () => {
           Why Choose Us?
         </h2>
         <ul>
-          <li style={{ fontSize: "1.2rem", color: "#555", textAlign: "justify" }}>
+          <li
+            style={{ fontSize: "1.2rem", color: "#555", textAlign: "justify" }}
+          >
             <strong>Expert Craftsmanship:</strong> Every job is completed with
             meticulous attention to detail.
           </li>
-          <li style={{ fontSize: "1.2rem", color: "#555", textAlign: "justify" }}>
+          <li
+            style={{ fontSize: "1.2rem", color: "#555", textAlign: "justify" }}
+          >
             <strong>Top-Quality Materials:</strong> We use industry-leading
             products for long-lasting results.
           </li>
-          <li style={{ fontSize: "1.2rem", color: "#555", textAlign: "justify" }}>
+          <li
+            style={{ fontSize: "1.2rem", color: "#555", textAlign: "justify" }}
+          >
             <strong>Affordable Pricing:</strong> Competitive rates with no
             hidden fees.
           </li>
-          <li style={{ fontSize: "1.2rem", color: "#555", textAlign: "justify" }}>
+          <li
+            style={{ fontSize: "1.2rem", color: "#555", textAlign: "justify" }}
+          >
             <strong>Customer-Centric Service:</strong> We prioritize your
             satisfaction, offering free consultations and flexible scheduling.
           </li>

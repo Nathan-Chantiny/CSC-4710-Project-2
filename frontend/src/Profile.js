@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from 'react-router-dom';
 import { jwtDecode } from "jwt-decode";
 import axios from "axios";
+import Strings from "./Strings";
 
 const getUserIdFromToken = () => {
   const token = localStorage.getItem("token");
@@ -213,28 +214,59 @@ const Profile = () => {
           }}
         >
           <li>
-            <Link to="/" style={menuLinkStyle}>
-              Home
-            </Link>
-          </li>
-          <li>
-            <Link to="/quote" style={menuLinkStyle}>
-              Quote
-            </Link>
-          </li>
-          <li>
-            <button
-              onClick={handleLogout}
+            <Link
+              to="/"
               style={{
-                ...menuLinkStyle,
-                background: "#f5f5f5",
-                border: "none",
-                cursor: "pointer",
+                textDecoration: "none",
+                fontSize: "1.2rem",
+                color: "#007bff",
               }}
             >
-              Logout
-            </button>
+              {Strings.homePageName}
+            </Link>
           </li>
+          {localStorage.getItem("token") && (
+            <li>
+              <Link
+                to="/quote"
+                style={{
+                  textDecoration: "none",
+                  fontSize: "1.2rem",
+                  color: "#007bff",
+                }}
+              >
+                {Strings.quoteName}
+              </Link>
+            </li>
+          )}
+          {localStorage.getItem("token") && (
+            <li>
+              <Link
+                to="/bills"
+                style={{
+                  textDecoration: "none",
+                  fontSize: "1.2rem",
+                  color: "#007bff",
+                }}
+              >
+                {Strings.billsName}
+              </Link>
+            </li>
+          )}
+          {localStorage.getItem("token") && (
+            <li>
+              <button
+                onClick={handleLogout}
+                style={{
+                  textDecoration: "none",
+                  fontSize: "1.2rem",
+                  color: "#007bff",
+                }}
+              >
+                {Strings.logoutName}
+              </button>
+            </li>
+          )}
         </ul>
       </nav>
 
@@ -278,39 +310,46 @@ const Profile = () => {
           </div>
           <div>
             {quotes
-              .filter((quote) => filterStatus === "all" || quote.approval_status === filterStatus)
+              .filter(
+                (quote) =>
+                  filterStatus === "all" ||
+                  quote.approval_status === filterStatus
+              )
               .map((quote, index) => (
-              <div key={quote.id} style={{ marginBottom: "20px" }}>
-                <h3>{index + 1}.</h3>
-                <h1 style={h1Style}>
-                  {quote.first} {quote.last} -{">"} {quote.phone}, {quote.email}{" "}
-                </h1>
-                <p>Address: {quote.address}</p>
-                <p>Square Feet: {quote.square_feet}</p>
-                <p>Price: {quote.price}</p>
-                <p>Note: {quote.note}</p>
-                <p>Approval Status: {quote.approval_status}</p>{" "}
-                {/* Display approval status */}
-                <div>
-                  {quote.approval_status === "pending" && (
-                    <button
-                      onClick={() => handleApprove(quote.quote_id, quote.price)}
-                      style={{ marginRight: "10px", padding: "5px 10px" }}
-                    >
-                      Approve
-                    </button>
-                  )}
-                  {quote.approval_status === "pending" && (
-                    <button
-                      onClick={() => handleDeny(quote.quote_id)}
-                      style={{ marginRight: "10px", padding: "5px 10px" }}
-                    >
-                      Deny
-                    </button>
-                  )}
+                <div key={quote.id} style={{ marginBottom: "20px" }}>
+                  <h3>{index + 1}.</h3>
+                  <h1 style={h1Style}>
+                    {quote.first} {quote.last} -{">"} {quote.phone},{" "}
+                    {quote.email}{" "}
+                  </h1>
+                  <p>Address: {quote.address}</p>
+                  <p>Square Feet: {quote.square_feet}</p>
+                  <p>Price: {quote.price}</p>
+                  <p>Note: {quote.note}</p>
+                  <p>Approval Status: {quote.approval_status}</p>{" "}
+                  {/* Display approval status */}
+                  <div>
+                    {quote.approval_status === "pending" && (
+                      <button
+                        onClick={() =>
+                          handleApprove(quote.quote_id, quote.price)
+                        }
+                        style={{ marginRight: "10px", padding: "5px 10px" }}
+                      >
+                        Approve
+                      </button>
+                    )}
+                    {quote.approval_status === "pending" && (
+                      <button
+                        onClick={() => handleDeny(quote.quote_id)}
+                        style={{ marginRight: "10px", padding: "5px 10px" }}
+                      >
+                        Deny
+                      </button>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
           </div>
         </div>
       ) : (
@@ -352,72 +391,76 @@ const Profile = () => {
           </div>
           <div>
             {specificQuotes
-              .filter((quote) => filterStatus === "all" || quote.approval_status === filterStatus)
+              .filter(
+                (quote) =>
+                  filterStatus === "all" ||
+                  quote.approval_status === filterStatus
+              )
               .map((specificQuote, index) => (
-              <div key={specificQuote.id} style={{ marginBottom: "20px" }}>
-                <h3>{index + 1}.</h3>
-                <h3>
-                  {specificQuote.first} {specificQuote.last}
-                </h3>
-                <p>Address: {specificQuote.address}</p>
-                <p>Square Feet: {specificQuote.square_feet}</p>
-                <p>Price: {specificQuote.price}</p>
-                <p>Note: {specificQuote.note}</p>
-                <p>Approval Status: {specificQuote.approval_status}</p>
-                {specificQuote.start_date != null && (
-                  <p>
-                    Proposed start date:{" "}
-                    {new Date(specificQuote.start_date).toLocaleDateString()}
-                  </p>
-                )}
-                {specificQuote.end_date != null && (
-                  <p>
-                    Proposed end date:{" "}
-                    {new Date(specificQuote.end_date).toLocaleDateString()}
-                  </p>
-                )}
-                {specificQuote.cost !== null && (
-                  <p>Proposed cost: {specificQuote.cost}</p>
-                )}
-                {specificQuote.deny_reason !== null && (
-                  <p>Reason for denial: {specificQuote.deny_reason}</p>
-                )}
-                {/* Display approval status */}
-                <div>
-                  {specificQuote.approval_status === "approved" && (
-                    <button
-                      onClick={() =>
-                        handleAccept(
-                          specificQuote.quote_id,
-                          specificQuote.price
-                        )
-                      }
-                      style={{ marginRight: "10px", padding: "5px 10px" }}
-                    >
-                      Accept
-                    </button>
+                <div key={specificQuote.id} style={{ marginBottom: "20px" }}>
+                  <h3>{index + 1}.</h3>
+                  <h3>
+                    {specificQuote.first} {specificQuote.last}
+                  </h3>
+                  <p>Address: {specificQuote.address}</p>
+                  <p>Square Feet: {specificQuote.square_feet}</p>
+                  <p>Price: {specificQuote.price}</p>
+                  <p>Note: {specificQuote.note}</p>
+                  <p>Approval Status: {specificQuote.approval_status}</p>
+                  {specificQuote.start_date != null && (
+                    <p>
+                      Proposed start date:{" "}
+                      {new Date(specificQuote.start_date).toLocaleDateString()}
+                    </p>
                   )}
-                  {specificQuote.approval_status === "approved" && (
-                    <button
-                      onClick={() =>
-                        handleRequoteNavigaton(specificQuote.quote_id)
-                      }
-                      style={{ padding: "5px 10px" }}
-                    >
-                      Reject
-                    </button>
+                  {specificQuote.end_date != null && (
+                    <p>
+                      Proposed end date:{" "}
+                      {new Date(specificQuote.end_date).toLocaleDateString()}
+                    </p>
                   )}
-                  {specificQuote.approval_status === "denied" && (
-                    <button
-                      onClick={() => handleDelete(specificQuote.quote_id)}
-                      style={{ padding: "5px 10px" }}
-                    >
-                      Delete
-                    </button>
+                  {specificQuote.cost !== null && (
+                    <p>Proposed cost: {specificQuote.cost}</p>
                   )}
+                  {specificQuote.deny_reason !== null && (
+                    <p>Reason for denial: {specificQuote.deny_reason}</p>
+                  )}
+                  {/* Display approval status */}
+                  <div>
+                    {specificQuote.approval_status === "approved" && (
+                      <button
+                        onClick={() =>
+                          handleAccept(
+                            specificQuote.quote_id,
+                            specificQuote.price
+                          )
+                        }
+                        style={{ marginRight: "10px", padding: "5px 10px" }}
+                      >
+                        Accept
+                      </button>
+                    )}
+                    {specificQuote.approval_status === "approved" && (
+                      <button
+                        onClick={() =>
+                          handleRequoteNavigaton(specificQuote.quote_id)
+                        }
+                        style={{ padding: "5px 10px" }}
+                      >
+                        Reject
+                      </button>
+                    )}
+                    {specificQuote.approval_status === "denied" && (
+                      <button
+                        onClick={() => handleDelete(specificQuote.quote_id)}
+                        style={{ padding: "5px 10px" }}
+                      >
+                        Delete
+                      </button>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
           </div>
         </div>
       )}
