@@ -250,6 +250,25 @@ app.patch("/update_quote_status", authenticateToken, (req, res) => {
   );
 });
 
+// Endpoint to create an order of work
+app.post("/create_order_of_work", authenticateToken, (req, res) => {
+  const { quoteId, workPeriod, agreedPrice } = req.body;
+
+  // Insert the order of work into the database
+  db.query(
+    "INSERT INTO orderofwork (QuoteRequestID, WorkPeriod, AgreedPrice, Status) VALUES (?, ?, ?, 'Pending')",
+    [quoteId, workPeriod, agreedPrice],
+    (err, result) => {
+      if (err) {
+        return res.status(500).json({ message: "Failed to create order of work", error: err.message });
+      }
+      res.status(201).json({ message: "Order of work created successfully" });
+    }
+  );
+});
+
+
+
 
 // Fetch specific user's quotes
 app.get("/specific_quotes", authenticateToken, (req, res) => {

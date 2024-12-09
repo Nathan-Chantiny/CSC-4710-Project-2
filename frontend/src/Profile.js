@@ -68,7 +68,6 @@ const Profile = () => {
         setSpecificQuotes(res.data);
       } catch (err) {
         console.error("Error fetching quotes:", err);
-        // setError("Error fetching quotes. Please try again."); // commented out so we don't see errors in David Smith Profile
       }
     };
 
@@ -82,19 +81,38 @@ const Profile = () => {
     navigate("/login"); // Redirect to login page
   };
 
-  const handleApprove = async (quoteId) => {
+  const handleApprove = async (quoteId, price) => {
     const token = localStorage.getItem("token");
+
+    // Prompt the user for start and end dates
+    const startDate = prompt("Enter the start date (YYYY-MM-DD):");
+    const endDate = prompt("Enter the end date (YYYY-MM-DD):");
+
+    if (!startDate || !endDate) {
+      alert("Start date and end date are required.");
+      return;
+    }
+
     try {
+      // Update quote approval status
       await axios.patch(
         "http://localhost:5000/update_quote_status",
         { quoteId, approvalStatus: "approved" },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      alert("Quote approved!");
+
+      // Create the order of work
+      await axios.post(
+        "http://localhost:5000/create_order_of_work",
+        { quoteId, workPeriod: `${startDate} to ${endDate}`, agreedPrice: price },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      alert("Quote approved and order of work created!");
       window.location.reload(); // Reload to fetch the updated quotes
     } catch (err) {
-      console.error("Error approving quote:", err.message);
-      alert("Failed to approve the quote. Please try again.");
+      console.error("Error approving quote or creating order of work:", err.message);
+      alert("Failed to process the quote approval. Please try again.");
     }
   };
 
@@ -155,7 +173,7 @@ const Profile = () => {
             <button
               onClick={handleLogout}
               style={{
-                ...menuLinkStyle, // Apply the same menu style to the logout button
+                ...menuLinkStyle,
                 background: "#f5f5f5",
                 border: "none",
                 cursor: "pointer",
@@ -191,17 +209,18 @@ const Profile = () => {
           <div>
             {quotes.map((quote, index) => (
               <div key={quote.id} style={{ marginBottom: "20px" }}>
-                <h3>
-                  {index + 1}.
-                </h3>
-                <h1 style={h1Style}>{quote.first} {quote.last} -{">"} {quote.phone}, {quote.email}{" "}</h1>
+                <h3>{index + 1}.</h3>
+                <h1 style={h1Style}>
+                  {quote.first} {quote.last} -{">"} {quote.phone}, {quote.email}{" "}
+                </h1>
                 <p>Address: {quote.address}</p>
                 <p>Square Feet: {quote.square_feet}</p>
                 <p>Price: {quote.price}</p>
+                <p>Note: {quote.note}</p>
                 <p>Approval Status: {quote.approval_status}</p> {/* Display approval status */}
                 <div>
                   <button
-                    onClick={() => handleApprove(quote.id)}
+                    onClick={() => handleApprove(quote.id, quote.price)}
                     style={{ marginRight: "10px", padding: "5px 10px" }}
                   >
                     Approve
@@ -240,14 +259,15 @@ const Profile = () => {
           <div>
             {specificQuotes.map((specificQuote, index) => (
               <div key={specificQuote.id} style={{ marginBottom: "20px" }}>
+                <h3>{index + 1}.</h3>
                 <h3>
-                  {index + 1}.
+                  {specificQuote.first} {specificQuote.last}
                 </h3>
-                <h3>{specificQuote.first} {specificQuote.last}</h3>
                 <p>Address: {specificQuote.address}</p>
                 <p>Square Feet: {specificQuote.square_feet}</p>
                 <p>Price: {specificQuote.price}</p>
-                <p>Approval Status: {specificQuote.approval_status}</p> {/* Display approval status */}
+                <p>Note: {specificQuote.note}</p>
+                <p>Approval Status: {specificQuote.approval_status}</p>
               </div>
             ))}
           </div>
@@ -275,10 +295,10 @@ menuLinkStyle[':hover'] = {
 };
 
 const h1Style = {
-  fontSize: "1.5rem", // Smaller font size
+  fontSize: "1.5rem",
   color: "#333",
   marginBottom: "10px",
-  textAlign: "left", // Align text to the left
+  textAlign: "left",
 };
 
 export default Profile;
