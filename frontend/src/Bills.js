@@ -2,7 +2,7 @@ import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Strings from "./Strings";
 
-const HomePage = () => {
+const Bills = () => {
   const token = localStorage.getItem("token"); // Check if the user is logged in
   const navigate = useNavigate();
 
@@ -325,4 +325,4 @@ const HomePage = () => {
   );
 };
 
-export default HomePage;
+export default Bills;

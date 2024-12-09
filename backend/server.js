@@ -397,7 +397,8 @@ app.post("/generate_bill", authenticateToken, (req, res) => {
   const userId = req.user.userId;
 
   // Check if the user is David Smith
-  if (userId !== 0) { // 0 is the ID for David Smith
+  if (userId !== 0) {
+    // 0 is the ID for David Smith
     return res.status(403).json({ message: "Unauthorized action" });
   }
 
@@ -408,7 +409,10 @@ app.post("/generate_bill", authenticateToken, (req, res) => {
     (err, result) => {
       if (err) {
         console.error("Error fetching order of work:", err.message);
-        return res.status(500).json({ message: "Failed to fetch order of work", error: err.message });
+        return res.status(500).json({
+          message: "Failed to fetch order of work",
+          error: err.message,
+        });
       }
 
       if (result.length === 0) {
@@ -424,7 +428,9 @@ app.post("/generate_bill", authenticateToken, (req, res) => {
         (err, result) => {
           if (err) {
             console.error("Error creating bill:", err.message);
-            return res.status(500).json({ message: "Failed to create bill", error: err.message });
+            return res
+              .status(500)
+              .json({ message: "Failed to create bill", error: err.message });
           }
 
           console.log("Bill created successfully for OrderID:", OrderID);
@@ -433,4 +439,40 @@ app.post("/generate_bill", authenticateToken, (req, res) => {
       );
     }
   );
+
+  // Fetch all orders
+  app.get("/orders", authenticateToken, (req, res) => {
+    const query = `
+    SELECT orderofwork.*, users.first, users.last
+    FROM orderofwork
+    JOIN quotes ON orderofwork.QuoteRequestID = quotes.quote_id
+    JOIN users ON quotes.cust_id = users.id
+  `;
+    db.query(query, (err, result) => {
+      if (err) {
+        return res
+          .status(500)
+          .json({ message: "Error fetching orders", error: err.message });
+      }
+      res.json(result);
+    });
+  });
+
+  // Fetch specific user's orders
+  app.get("/specific_orders", authenticateToken, (req, res) => {
+    const cust_id = req.user.userId;
+
+    db.query(
+      "SELECT * FROM orders WHERE QuoteRequestID=?",
+      [cust_id],
+      (err, result) => {
+        if (err) {
+          return res
+            .status(500)
+            .json({ message: "Error fetching orders", error: err });
+        }
+        res.json(result);
+      }
+    );
+  });
 });

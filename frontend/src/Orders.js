@@ -1,15 +1,91 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Strings from "./Strings";
+import { jwtDecode } from "jwt-decode";
+import axios from "axios";
 
-const HomePage = () => {
+const getUserIdFromToken = () => {
+  const token = localStorage.getItem("token");
+  if (!token) return null;
+
+  try {
+    const decodedToken = jwtDecode(token);
+    return decodedToken.userId; // Adjust this based on your token structure
+  } catch (err) {
+    console.error("Invalid token:", err);
+    return null;
+  }
+};
+
+const Orders = () => {
   const token = localStorage.getItem("token"); // Check if the user is logged in
+  const userId = getUserIdFromToken();
+  const [error, setError] = useState("");
   const navigate = useNavigate();
+
+  const [userData, setUserData] = useState({ first: "", last: "" });
+  const [orders, setOrders] = useState([]);
+  const [specificOrders, setSpecificOrders] = useState([]);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await axios.get("http://localhost:5000/profile", {
+          headers: {
+            Authorization: `Bearer ${token}`, // Send the JWT token in the Authorization header
+          },
+        });
+        setUserData(res.data);
+      } catch (err) {
+        console.error("Error fetching user data:", err);
+        if (err.response && err.response.status === 401) {
+          navigate("/login"); // Redirect to login page if unauthorized
+        }
+      }
+    };
+
+    const fetchOrders = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await axios.get("http://localhost:5000/orders", {
+          headers: {
+            Authorization: `Bearer ${token}`, // Send the JWT token in the Authorization header
+          },
+        });
+        setOrders(res.data);
+      } catch (err) {
+        console.error("Error fetching quotes:", err);
+        setError("Error fetching quotes. Please try again.");
+      }
+    };
+
+    const fetchSpecificOrders = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await axios.get("http://localhost:5000/specific_orders", {
+          headers: {
+            Authorization: `Bearer ${token}`, // Send the JWT token in the Authorization header
+          },
+        });
+        setSpecificOrders(res.data);
+      } catch (err) {
+        console.error("Error fetching quotes:", err);
+        setError("Error fetching quotes. Please try again.");
+      }
+    };
+
+    fetchUserData();
+    fetchOrders();
+    fetchSpecificOrders();
+  }, [navigate]);
 
   const handleLogout = () => {
     localStorage.removeItem("token"); // Remove the JWT token from localStorage
     navigate("/login"); // Redirect to login page
   };
+
+  const handleCreateBill = async (e) => {};
 
   return (
     <div
@@ -109,222 +185,89 @@ const HomePage = () => {
         </nav>
       </header>
 
-      {/* Session Information Paragraph */}
-      <section style={{ marginBottom: "30px" }}>
-        <h2
+      {/* Profile Content */}
+      {userId === 0 ? (
+        <div
           style={{
-            fontSize: "2rem",
-            color: "#007bff",
-            textAlign: "center",
-            marginBottom: "20px",
+            marginTop: "20px",
+            padding: "10px",
+            backgroundColor: "#f5f5f5",
+            borderRadius: "8px",
           }}
         >
-          Understanding Sessions: Stateful vs. Stateless
-        </h2>
-        <p style={{ fontSize: "1.2rem", color: "#555", textAlign: "justify" }}>
-          A session is a temporary connection between a user and a system,
-          allowing the system to remember the user's activity. In a stateful
-          session, the server keeps track of the user's session by storing
-          information on the server side, using a session ID to recognize the
-          user with each request. On the other hand, in a stateless session, the
-          server does not store any session data. Instead, the user's data, such
-          as authentication information, is stored on the client side in a
-          token, like a JSON Web Token (JWT), which is sent with each request.
-          APIs typically use stateless sessions for scalability and simplicity,
-          since no session data is stored on the server.
-        </p>
-      </section>
-
-      {/* Main Content */}
-      <main>
-        {/* JWT Tutorial Section */}
-        <section style={{ marginBottom: "40px" }}>
-          <h2
+          <h3
             style={{
-              fontSize: "2rem",
+              fontSize: "1.5rem",
               color: "#007bff",
-              textAlign: "center",
-              marginBottom: "20px",
+              marginBottom: "15px",
             }}
           >
-            What is JWT (JSON Web Token)?
-          </h2>
-          <p
-            style={{ fontSize: "1.2rem", color: "#555", textAlign: "justify" }}
-          >
-            JSON Web Token (JWT) is an open standard (RFC 7519) that defines a
-            compact, URL-safe means of representing claims to be transferred
-            between two parties. The claims in a JWT are encoded as a JSON
-            object that is used for securely transmitting information between
-            parties. JWTs are commonly used for **authentication** in web
-            applications.
-          </p>
-          <p
-            style={{ fontSize: "1.2rem", color: "#555", textAlign: "justify" }}
-          >
-            A JWT is composed of three parts:
-          </p>
-          <ul
-            style={{ fontSize: "1.2rem", color: "#555", marginBottom: "20px" }}
-          >
-            <li>
-              <strong>Header</strong>: Contains metadata such as the type of
-              token and signing algorithm used (e.g., HMAC SHA256).
-            </li>
-            <li>
-              <strong>Payload</strong>: Contains the claims or data being
-              transmitted (e.g., user information like ID, username).
-            </li>
-            <li>
-              <strong>Signature</strong>: Used to verify that the token wasn’t
-              tampered with. It's created by taking the encoded header, encoded
-              payload, a secret, and the algorithm specified in the header.
-            </li>
-          </ul>
-        </section>
-
-        {/* How JWT Works Section with Image */}
-        <section style={{ marginBottom: "40px" }}>
-          <h2
-            style={{
-              fontSize: "2rem",
-              color: "#007bff",
-              textAlign: "center",
-              marginBottom: "20px",
-            }}
-          >
-            How JWT Works
-          </h2>
-          <p
-            style={{ fontSize: "1.2rem", color: "#555", textAlign: "justify" }}
-          >
-            Here’s a step-by-step breakdown of how JWT works in the context of
-            authentication:
-          </p>
-          <ul
-            style={{ fontSize: "1.2rem", color: "#555", marginBottom: "20px" }}
-          >
-            <li>
-              <strong>Step 1: User Login</strong> - The user enters their
-              credentials (username and password) and submits them to the server
-              via a login form.
-            </li>
-            <li>
-              <strong>Step 2: Server Generates JWT</strong> - If the credentials
-              are valid, the server generates a JWT and sends it back to the
-              client.
-            </li>
-            <li>
-              <strong>Step 3: Client Stores JWT</strong> - The client (browser
-              or app) stores the JWT, usually in **localStorage** or
-              **sessionStorage**.
-            </li>
-            <li>
-              <strong>Step 4: Client Sends JWT</strong> - For each subsequent
-              request to a protected route, the client sends the JWT in the
-              **Authorization** header.
-            </li>
-            <li>
-              <strong>Step 5: Server Verifies JWT</strong> - The server verifies
-              the JWT using a secret key. If valid, the server processes the
-              request and returns the response. If invalid or expired, the user
-              is denied access.
-            </li>
-          </ul>
-
-          {/* JWT Workflow Image */}
-          <div style={{ textAlign: "center", marginBottom: "20px" }}>
-            <figure>
-              <img
-                src="/jwtworkflow.jpeg"
-                alt="JWT Workflow Diagram"
-                style={{ maxWidth: "100%", height: "auto" }}
-              />
-              <figcaption
-                style={{
-                  marginTop: "10px",
-                  fontStyle: "italic",
-                  color: "#666",
-                }}
-              >
-                JWT Workflow Diagram. Image source:{" "}
-                <a
-                  href="https://www.wallarm.com/what/oauth-vs-jwt-detailed-comparison"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Wallarm
-                </a>
-                .
-              </figcaption>
-            </figure>
+            Welcome to Your Profile Page, David Smith!
+          </h3>
+          <h2>{Strings.ordersName}</h2>
+          {error && <p>{error}</p>}
+          <div>
+            {orders.map((order, index) => (
+              <div key={order.id} style={{ marginBottom: "20px" }}>
+                <h3>{index + 1}.</h3>
+                <h1 style={h1Style}>
+                  {order.first} {order.last}{" "}
+                </h1>
+                <p>OrderID: {order.OrderID}</p>
+                <p>QuoteRequestID: {order.QuoteRequestID}</p>
+                <p>WorkPeriod: {order.WorkPeriod}</p>
+                <p>AgreedPrice: {order.AgreedPrice}</p>
+                <p>Status: {order.Status}</p>
+                {/* Generate Bill */}
+                <div>
+                  <p>generate bill</p>
+                </div>
+              </div>
+            ))}
           </div>
-        </section>
-
-        {/* Project Overview Section */}
-        <section style={{ marginBottom: "40px" }}>
-          <h2
+        </div>
+      ) : (
+        <div
+          style={{
+            marginTop: "20px",
+            padding: "10px",
+            backgroundColor: "#f5f5f5",
+            borderRadius: "8px",
+          }}
+        >
+          <h3
             style={{
-              fontSize: "2rem",
+              fontSize: "1.5rem",
               color: "#007bff",
-              textAlign: "center",
-              marginBottom: "20px",
+              marginBottom: "15px",
             }}
           >
-            About This Project
-          </h2>
-          <p
-            style={{ fontSize: "1.2rem", color: "#555", textAlign: "justify" }}
-          >
-            This project is a simple demonstration of stateless authentication
-            using JWT. It includes:
-          </p>
-          <ul
-            style={{ fontSize: "1.2rem", color: "#555", marginBottom: "20px" }}
-          >
-            <li>
-              **Home Page**: This public page provides an overview of JWT and
-              explains how it works.
-            </li>
-            <li>
-              **Login**: Users can log in and receive a JWT, which is stored in
-              the browser.
-            </li>
-            <li>**Register**: New users can register and create an account.</li>
-            <li>
-              **Dashboard**: A protected page that can only be accessed with a
-              valid JWT.
-            </li>
-            <li>
-              **Profile Page**: Another protected page that displays user
-              information and can only be accessed with a valid JWT.
-            </li>
-          </ul>
-          <p
-            style={{ fontSize: "1.2rem", color: "#555", textAlign: "justify" }}
-          >
-            The project helps developers understand how stateless authentication
-            works using JWT and how it can be implemented in modern web
-            applications.
-          </p>
-        </section>
-      </main>
-
-      {/* Footer */}
-      <footer
-        style={{
-          textAlign: "center",
-          padding: "10px 0",
-          borderTop: "1px solid #ddd",
-          backgroundColor: "#f5f5f5",
-        }}
-      >
-        <p style={{ fontSize: "0.9rem", color: "#777" }}>
-          &copy; 2024 My Website. All rights reserved.
-        </p>
-      </footer>
+            Welcome to Your Orders Page, {userData.first} {userData.last}!
+          </h3>
+          <h2>Quotes</h2>
+          {error && <p>{error}</p>}
+          <div>
+            {specificOrders.map((specificOrder, index) => (
+              <div key={specificOrders.id} style={{ marginBottom: "20px" }}>
+                <p>OrderID: {specificOrder.OrderID}</p>
+                <p>QuoteRequestID: {specificOrder.QuoteRequestID}</p>
+                <p>WorkPeriod: {specificOrder.WorkPeriod}</p>
+                <p>AgreedPrice: {specificOrder.AgreedPrice}</p>
+                <p>Status: {specificOrder.Status}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
-export default HomePage;
+const h1Style = {
+  fontSize: "1.5rem",
+  color: "#333",
+  marginBottom: "10px",
+  textAlign: "left",
+};
+
+export default Orders;
