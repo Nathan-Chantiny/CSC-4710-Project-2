@@ -1,8 +1,8 @@
-import React from 'react';
+import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 const HomePage = () => {
-  const token = localStorage.getItem('token'); // Check if the user is logged in
+  const token = localStorage.getItem("token"); // Check if the user is logged in
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -24,7 +24,7 @@ const HomePage = () => {
       {/* Header */}
       <header style={{ textAlign: "center", marginBottom: "30px" }}>
         <h1 style={{ fontSize: "2.5rem", color: "#333" }}>
-          Welcome to the JWT Tutorial Home Page
+          Bills
         </h1>
         <nav style={{ marginTop: "20px" }}>
           <ul
@@ -85,20 +85,6 @@ const HomePage = () => {
                   }}
                 >
                   Profile
-                </Link>
-              </li>
-            )}
-            {token && (
-              <li>
-                <Link
-                  to="/bills"
-                  style={{
-                    textDecoration: "none",
-                    fontSize: "1.2rem",
-                    color: "#007bff",
-                  }}
-                >
-                  Bills
                 </Link>
               </li>
             )}
