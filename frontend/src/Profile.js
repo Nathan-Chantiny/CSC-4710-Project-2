@@ -330,11 +330,10 @@ const Profile = () => {
                   quote.approval_status === filterStatus
               )
               .map((quote, index) => (
-                <div key={quote.id} style={{ marginBottom: "20px" }}>
-                  <h3>{index + 1}.</h3>
+                <div key={index} style={{ marginBottom: "20px" }}>
                   <h1 style={h1Style}>
-                    {quote.first} {quote.last} -{">"} {quote.phone},{" "}
-                    {quote.email}{" "}
+                    {index + 1}. {quote.first} {quote.last} -{">"} {quote.phone}
+                    , {quote.email}{" "}
                   </h1>
                   <p>Address: {quote.address}</p>
                   <p>Square Feet: {quote.square_feet}</p>
@@ -411,11 +410,10 @@ const Profile = () => {
                   quote.approval_status === filterStatus
               )
               .map((specificQuote, index) => (
-                <div key={specificQuote.id} style={{ marginBottom: "20px" }}>
-                  <h3>{index + 1}.</h3>
-                  <h3>
-                    {specificQuote.first} {specificQuote.last}
-                  </h3>
+                <div key={index} style={{ marginBottom: "20px" }}>
+                  <h1 style={h1Style}>
+                    {index + 1}.
+                  </h1>
                   <p>Address: {specificQuote.address}</p>
                   <p>Square Feet: {specificQuote.square_feet}</p>
                   <p>Price: {specificQuote.price}</p>
