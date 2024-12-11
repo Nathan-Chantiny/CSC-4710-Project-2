@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { jwtDecode } from "jwt-decode"; // Corrected import - just directly import without braces
+import { jwtDecode } from "jwt-decode";
 
 axios.defaults.baseURL = "http://localhost:5000";
 
@@ -83,7 +83,7 @@ const Bills = () => {
           bill.BillID === billId
             ? {
                 ...bill,
-                Status: action === "payBill" ? "Paid" : "Disputed",
+                Status: action === "payBill" ? "Paid" : "Dispute",
                 Note: note || bill.Note,
               }
             : bill
@@ -91,6 +91,62 @@ const Bills = () => {
       );
     } catch (err) {
       console.error(`Error ${action} bill:`, err);
+    }
+  };
+
+  const respondToDispute = async (bill) => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("You must be logged in to perform this action.");
+      return;
+    }
+
+    // Prompt for response to dispute
+    const responseNote = window.prompt("Address the concerns from the client:");
+    if (responseNote === null) return; // User canceled
+
+    const notePrefix = "David Smith Note: ";
+    let updatedNote = bill.Note ? `${bill.Note}\n${notePrefix}${responseNote}` : responseNote;
+
+    // Prompt for optional amount change
+    const newAmountInput = window.prompt("(Optional) Change the amount charged:");
+    let newAmount = null;
+    if (newAmountInput !== null && newAmountInput.trim() !== "") {
+      const confirmChange = window.confirm("Are you sure you want to change the amount?");
+      if (confirmChange) {
+        newAmount = newAmountInput;
+      }
+    }
+
+    try {
+      await axios.post(
+        `/api/respondDispute/${bill.BillID}`,
+        {
+          note: updatedNote,
+          amount: newAmount,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      alert("Dispute responded to successfully. Status changed to Pending.");
+
+      setBills((prevBills) =>
+        prevBills.map((b) =>
+          b.BillID === bill.BillID
+            ? {
+                ...b,
+                Status: "Pending",
+                Note: updatedNote,
+                Amount: newAmount ? newAmount : b.Amount,
+              }
+            : b
+        )
+      );
+    } catch (err) {
+      console.error("Error responding to dispute:", err);
+      alert("Failed to respond to dispute.");
     }
   };
 
@@ -177,7 +233,7 @@ const Bills = () => {
                     <td style={{ padding: "12px" }}>{bill.UserID || "N/A"}</td>
                   )}
                   <td style={{ padding: "12px" }}>
-                    {userId !== 0 && (
+                    {userId !== 0 && bill.Status === "Pending" && (
                       <>
                         <button
                           onClick={() => handleBillAction("payBill", bill.BillID)}
@@ -207,6 +263,21 @@ const Bills = () => {
                           Dispute
                         </button>
                       </>
+                    )}
+                    {userId === 0 && bill.Status === "Dispute" && (
+                      <button
+                        onClick={() => respondToDispute(bill)}
+                        style={{
+                          padding: "6px 12px",
+                          backgroundColor: "#ffc107",
+                          color: "#000",
+                          border: "none",
+                          borderRadius: "4px",
+                          cursor: "pointer",
+                        }}
+                      >
+                        Respond to Dispute
+                      </button>
                     )}
                   </td>
                 </tr>
