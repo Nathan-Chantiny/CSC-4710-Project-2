@@ -117,14 +117,24 @@ const authenticateToken = (req, res, next) => {
   const authHeader = req.headers["authorization"];
   const token = authHeader && authHeader.split(" ")[1];
 
-  if (token == null) return res.sendStatus(401);
+  // console.log("Authorization Header:", authHeader); // Logs the full Authorization header
+  // console.log("Extracted Token:", token);          // Logs the extracted token
+
+  if (token == null) {
+    console.error("No token provided");
+    return res.sendStatus(401);
+  }
 
   jwt.verify(token, "your_jwt_secret", (err, user) => {
-    if (err) return res.sendStatus(403);
+    if (err) {
+      console.error("Token verification failed:", err.message);
+      return res.sendStatus(403);
+    }
     req.user = user;
     next();
   });
 };
+
 
 // Protected route that requires JWT authentication
 app.get("/quote", authenticateToken, (req, res) => {
@@ -387,6 +397,25 @@ app.get("/specific_quotes", authenticateToken, (req, res) => {
       return res.status(500).json({ message: "Error fetching quotes", error: err });
     }
     res.json(result);
+  });
+});
+
+
+
+// Endpoint to get all bills
+app.get('/api/getBills', authenticateToken, (req, res) => {
+  const query = `
+      SELECT b.BillID, b.OrderID, b.Amount, b.Status, b.Note, o.WorkPeriod
+      FROM bill b
+      LEFT JOIN orderofwork o ON b.OrderID = o.OrderID
+  `;
+
+  db.query(query, (err, results) => {
+      if (err) {
+          console.error('Error fetching bills:', err.message);
+          return res.status(500).json({ message: 'Error fetching bills', error: err.message });
+      }
+      res.json(results);
   });
 });
 
