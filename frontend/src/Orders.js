@@ -25,12 +25,10 @@ const Orders = () => {
 
   const [userData, setUserData] = useState({ first: "", last: "" });
   const [orders, setOrders] = useState([]);
-  const [specificOrders, setSpecificOrders] = useState([]);
 
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const token = localStorage.getItem("token");
         const res = await axios.get("http://localhost:5000/profile", {
           headers: {
             Authorization: `Bearer ${token}`, // Send the JWT token in the Authorization header
@@ -47,45 +45,29 @@ const Orders = () => {
 
     const fetchOrders = async () => {
       try {
-        const token = localStorage.getItem("token");
-        const res = await axios.get("http://localhost:5000/orders", {
+        const endpoint = userId === 0 ? "/orders" : "/specific_orders";
+        const res = await axios.get(`http://localhost:5000${endpoint}`, {
           headers: {
             Authorization: `Bearer ${token}`, // Send the JWT token in the Authorization header
           },
         });
         setOrders(res.data);
       } catch (err) {
-        console.error("Error fetching quotes:", err);
-        setError("Error fetching quotes. Please try again.");
-      }
-    };
-
-    const fetchSpecificOrders = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const res = await axios.get("http://localhost:5000/specific_orders", {
-          headers: {
-            Authorization: `Bearer ${token}`, // Send the JWT token in the Authorization header
-          },
-        });
-        setSpecificOrders(res.data);
-      } catch (err) {
-        console.error("Error fetching quotes:", err);
-        setError("Error fetching quotes. Please try again.");
+        console.error("Error fetching orders:", err);
+        setError("Error fetching orders. Please try again.");
       }
     };
 
     fetchUserData();
     fetchOrders();
-    fetchSpecificOrders();
-  }, [navigate]);
+  }, [navigate, token, userId]);
 
   const handleLogout = () => {
     localStorage.removeItem("token"); // Remove the JWT token from localStorage
     navigate("/login"); // Redirect to login page
   };
 
-  const handleCreateBill = async (e) => {};
+  //const handleCreateBill = async (e) => {};
 
   return (
     <div
@@ -208,15 +190,14 @@ const Orders = () => {
           {error && <p>{error}</p>}
           <div>
             {orders.map((order, index) => (
-              <div key={order.id} style={{ marginBottom: "20px" }}>
-                <h3>{index + 1}.</h3>
+              <div key={index} style={{ marginBottom: "20px" }}>
                 <h1 style={h1Style}>
-                  {order.first} {order.last}{" "}
+                  {index + 1}. {order.first} {order.last}{" "}
                 </h1>
-                <p>OrderID: {order.OrderID}</p>
-                <p>QuoteRequestID: {order.QuoteRequestID}</p>
-                <p>WorkPeriod: {order.WorkPeriod}</p>
-                <p>AgreedPrice: {order.AgreedPrice}</p>
+                <p>Order ID: {order.OrderID}</p>
+                <p>Quote Request ID: {order.QuoteRequestID}</p>
+                <p>Work Period: {order.WorkPeriod}</p>
+                <p>Agreed Price: ${order.AgreedPrice}</p>
                 <p>Status: {order.Status}</p>
                 {/* Generate Bill */}
                 <div>
@@ -244,15 +225,16 @@ const Orders = () => {
           >
             Welcome to Your Orders Page, {userData.first} {userData.last}!
           </h3>
-          <h2>Quotes</h2>
+          <h2>{Strings.ordersName}</h2>
           {error && <p>{error}</p>}
           <div>
-            {specificOrders.map((specificOrder, index) => (
-              <div key={specificOrders.id} style={{ marginBottom: "20px" }}>
-                <p>OrderID: {specificOrder.OrderID}</p>
-                <p>QuoteRequestID: {specificOrder.QuoteRequestID}</p>
-                <p>WorkPeriod: {specificOrder.WorkPeriod}</p>
-                <p>AgreedPrice: {specificOrder.AgreedPrice}</p>
+            {orders.map((specificOrder, index) => (
+              <div key={index} style={{ marginBottom: "20px" }}>
+                <h1 style={h1Style}>
+                  {index + 1}. 
+                </h1>
+                <p>Work Period: {specificOrder.WorkPeriod}</p>
+                <p>Agreed Price: ${specificOrder.AgreedPrice}</p>
                 <p>Status: {specificOrder.Status}</p>
               </div>
             ))}

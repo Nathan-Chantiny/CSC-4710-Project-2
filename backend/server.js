@@ -248,6 +248,7 @@ app.patch("/quote_deny", authenticateToken, (req, res) => {
 
 // Endpoint to create an order of work
 app.post("/offer_accept", authenticateToken, (req, res) => {
+  const user_id = req.user.userId;
   const { quoteId } = req.body;
 
   // Fetch specific columns from the quotes table
@@ -276,8 +277,8 @@ app.post("/offer_accept", authenticateToken, (req, res) => {
 
       // Insert the order of work into the database
       db.query(
-        "INSERT INTO orderofwork (QuoteRequestID, WorkPeriod, AgreedPrice, Status) VALUES (?, ?, ?, 'Pending')",
-        [quoteId, workPeriod, agreedPrice],
+        "INSERT INTO orderofwork (QuoteRequestID, WorkPeriod, AgreedPrice, Status, cust_id) VALUES (?, ?, ?, 'In Progress', ?)",
+        [quoteId, workPeriod, agreedPrice, user_id],
         (err, result) => {
           if (err) {
             console.error("Error creating order of work:", err.message);
@@ -288,11 +289,6 @@ app.post("/offer_accept", authenticateToken, (req, res) => {
                 error: err.message,
               });
           }
-
-          console.log(
-            "Order of work created successfully for quoteId:",
-            quoteId
-          );
 
           // Update the approval_status in the quotes table
           db.query(
@@ -317,11 +313,6 @@ app.post("/offer_accept", authenticateToken, (req, res) => {
                     message: "Quote not found or approval status already set",
                   });
               }
-
-              console.log(
-                "Approval status updated successfully for quoteId:",
-                quoteId
-              );
 
               // Final response after all operations succeed
               res.status(201).json({
@@ -433,14 +424,14 @@ app.post("/generate_bill", authenticateToken, (req, res) => {
               .json({ message: "Failed to create bill", error: err.message });
           }
 
-          console.log("Bill created successfully for OrderID:", OrderID);
           res.status(201).json({ message: "Bill generated successfully" });
         }
       );
     }
   );
+});
 
-  // Fetch all orders
+// Fetch all orders
   app.get("/orders", authenticateToken, (req, res) => {
     const query = `
     SELECT orderofwork.*, users.first, users.last
@@ -460,11 +451,11 @@ app.post("/generate_bill", authenticateToken, (req, res) => {
 
   // Fetch specific user's orders
   app.get("/specific_orders", authenticateToken, (req, res) => {
-    const cust_id = req.user.userId;
+    const user_id = req.user.userId;
 
     db.query(
-      "SELECT * FROM orders WHERE QuoteRequestID=?",
-      [cust_id],
+      "SELECT * FROM orderofwork WHERE cust_id=?",
+      [user_id],
       (err, result) => {
         if (err) {
           return res
@@ -475,4 +466,3 @@ app.post("/generate_bill", authenticateToken, (req, res) => {
       }
     );
   });
-});
