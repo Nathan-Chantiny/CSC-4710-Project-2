@@ -2,13 +2,14 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import Strings from "./Strings";
+import { jwtDecode } from "jwt-decode"; // Updated import here
 
-// Set the base URL for axios if not using a proxy
 axios.defaults.baseURL = "http://localhost:5000";
 
-const Bills = ({ user }) => {
+const Bills = () => {
   const [bills, setBills] = useState([]);
   const [error, setError] = useState(null);
+  const [userId, setUserId] = useState(null);
 
   useEffect(() => {
     const fetchBills = async () => {
@@ -18,6 +19,11 @@ const Bills = ({ user }) => {
           setError("You must be logged in to view bills.");
           return;
         }
+
+        // Decode userId from the token using named export
+        const decoded = jwtDecode(token);
+        const currentUserId = decoded.userId;
+        setUserId(currentUserId);
 
         const response = await axios.get("/api/getBills", {
           headers: { Authorization: `Bearer ${token}` },
@@ -118,6 +124,8 @@ const Bills = ({ user }) => {
               <th style={{ padding: "12px" }}>Amount</th>
               <th style={{ padding: "12px" }}>Status</th>
               <th style={{ padding: "12px" }}>Note</th>
+              {/* Show User ID column only if userId is 0 */}
+              {userId === 0 && <th style={{ padding: "12px" }}>User ID</th>}
               <th style={{ padding: "12px" }}>Actions</th>
             </tr>
           </thead>
@@ -147,34 +155,43 @@ const Bills = ({ user }) => {
                   </td>
                   <td style={{ padding: "12px" }}>{bill.Status || "Pending"}</td>
                   <td style={{ padding: "12px" }}>{bill.Note || "N/A"}</td>
+                  {/* Show User ID only if userId is 0 */}
+                  {userId === 0 && (
+                    <td style={{ padding: "12px" }}>{bill.UserID || "N/A"}</td>
+                  )}
                   <td style={{ padding: "12px" }}>
-                    <button
-                      onClick={() => handleBillAction("payBill", bill.BillID)}
-                      style={{
-                        padding: "6px 12px",
-                        marginRight: "10px",
-                        backgroundColor: "#28a745",
-                        color: "#fff",
-                        border: "none",
-                        borderRadius: "4px",
-                        cursor: "pointer",
-                      }}
-                    >
-                      Pay
-                    </button>
-                    <button
-                      onClick={() => handleBillAction("disputeBill", bill.BillID)}
-                      style={{
-                        padding: "6px 12px",
-                        backgroundColor: "#dc3545",
-                        color: "#fff",
-                        border: "none",
-                        borderRadius: "4px",
-                        cursor: "pointer",
-                      }}
-                    >
-                      Dispute
-                    </button>
+                    {/* Show "Pay" and "Dispute" only if userId is NOT 0 */}
+                    {userId !== 0 && (
+                      <>
+                        <button
+                          onClick={() => handleBillAction("payBill", bill.BillID)}
+                          style={{
+                            padding: "6px 12px",
+                            marginRight: "10px",
+                            backgroundColor: "#28a745",
+                            color: "#fff",
+                            border: "none",
+                            borderRadius: "4px",
+                            cursor: "pointer",
+                          }}
+                        >
+                          Pay
+                        </button>
+                        <button
+                          onClick={() => handleBillAction("disputeBill", bill.BillID)}
+                          style={{
+                            padding: "6px 12px",
+                            backgroundColor: "#dc3545",
+                            color: "#fff",
+                            border: "none",
+                            borderRadius: "4px",
+                            cursor: "pointer",
+                          }}
+                        >
+                          Dispute
+                        </button>
+                      </>
+                    )}
                   </td>
                 </tr>
               ))
@@ -182,7 +199,7 @@ const Bills = ({ user }) => {
               !error && (
                 <tr>
                   <td
-                    colSpan="6"
+                    colSpan={userId === 0 ? "7" : "6"}
                     style={{ padding: "12px", textAlign: "center", color: "#777" }}
                   >
                     No bills available
@@ -324,7 +341,7 @@ const HomePage = () => {
         </nav>
       </header>
 
-      <main>{token && <Bills user={{ userId: 1 }} />}</main>
+      <main>{token && <Bills />}</main>
     </div>
   );
 };
