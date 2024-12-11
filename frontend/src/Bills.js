@@ -230,7 +230,7 @@ const Bills = () => {
   );
 };
 
-const Bills = () => {
+const HomePage = () => {
   const token = localStorage.getItem("token");
   const navigate = useNavigate();
 
@@ -362,4 +362,4 @@ const Bills = () => {
   );
 };
 
-export default Bills;
+export default HomePage;

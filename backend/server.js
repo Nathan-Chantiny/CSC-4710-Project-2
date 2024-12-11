@@ -506,4 +506,3 @@ app.post("/api/disputeBill/:billId", authenticateToken, (req, res) => {
       }
     );
   });
-});
