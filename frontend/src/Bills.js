@@ -118,6 +118,8 @@ const Bills = ({ user }) => {
               <th style={{ padding: "12px" }}>Amount</th>
               <th style={{ padding: "12px" }}>Status</th>
               <th style={{ padding: "12px" }}>Note</th>
+              {/* New User ID column */}
+              <th style={{ padding: "12px" }}>User ID</th>
               <th style={{ padding: "12px" }}>Actions</th>
             </tr>
           </thead>
@@ -147,6 +149,8 @@ const Bills = ({ user }) => {
                   </td>
                   <td style={{ padding: "12px" }}>{bill.Status || "Pending"}</td>
                   <td style={{ padding: "12px" }}>{bill.Note || "N/A"}</td>
+                  {/* Displaying User ID value here */}
+                  <td style={{ padding: "12px" }}>{bill.UserID || "N/A"}</td>
                   <td style={{ padding: "12px" }}>
                     <button
                       onClick={() => handleBillAction("payBill", bill.BillID)}
@@ -182,7 +186,7 @@ const Bills = ({ user }) => {
               !error && (
                 <tr>
                   <td
-                    colSpan="6"
+                    colSpan="7"
                     style={{ padding: "12px", textAlign: "center", color: "#777" }}
                   >
                     No bills available
