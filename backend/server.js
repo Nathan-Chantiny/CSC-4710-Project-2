@@ -1,4 +1,4 @@
-// Updated server.js:
+// Required dependencies
 const express = require("express");
 const mysql = require("mysql2");
 const bcrypt = require("bcrypt");
@@ -250,7 +250,7 @@ app.post("/offer_accept", authenticateToken, (req, res) => {
       const agreedPrice = cost || price;
 
       db.query(
-        "INSERT INTO orderofwork (QuoteRequestID, WorkPeriod, AgreedPrice, Status, cust_id) VALUES (?, ?, ?, 'In Progress', ?)",
+        "INSERT INTO orderofwork (QuoteRequestID, WorkPeriod, AgreedPrice, Status, cust_id) VALUES (?, ?, ?, 'Pending', ?)",
         [quoteId, workPeriod, agreedPrice, user_id],
         (err, result) => {
           if (err) {

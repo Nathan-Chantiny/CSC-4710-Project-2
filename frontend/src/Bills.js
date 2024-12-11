@@ -83,7 +83,7 @@ const Bills = () => {
           bill.BillID === billId
             ? {
                 ...bill,
-                Status: action === "payBill" ? "Paid" : "Dispute",
+                Status: action === "payBill" ? "Paid" : "Disputed",
                 Note: note || bill.Note,
               }
             : bill
