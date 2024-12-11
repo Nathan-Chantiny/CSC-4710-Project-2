@@ -422,3 +422,46 @@ app.post("/generate_bill", authenticateToken, (req, res) => {
     }
   );
 });
+
+// Route to pay a bill
+app.post("/api/payBill/:billId", authenticateToken, (req, res) => {
+  const billId = req.params.billId;
+  
+  db.query(
+    "UPDATE bill SET Status = 'Paid' WHERE BillID = ?",
+    [billId],
+    (err, result) => {
+      if (err) {
+        console.error("Error updating bill status:", err);
+        return res.status(500).json({ message: "Failed to update bill status" });
+      }
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ message: "Bill not found" });
+      }
+      res.json({ message: "Bill paid successfully" });
+    }
+  );
+});
+
+// Route to dispute a bill
+app.post("/api/disputeBill/:billId", authenticateToken, (req, res) => {
+  const billId = req.params.billId;
+  const { note } = req.body; // Get the note from the request body
+
+  db.query(
+    "UPDATE bill SET Status = 'Dispute', Note = ? WHERE BillID = ?",
+    [note, billId],
+    (err, result) => {
+      if (err) {
+        console.error("Error disputing bill:", err);
+        return res.status(500).json({ message: "Failed to dispute bill" });
+      }
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ message: "Bill not found" });
+      }
+      res.json({ message: "Bill disputed successfully" });
+    }
+  );
+});
+
+
