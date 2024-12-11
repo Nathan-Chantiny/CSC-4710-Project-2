@@ -410,11 +410,16 @@ app.post("/generate_bill", authenticateToken, (req, res) => {
         return res.status(404).json({ message: "Order of work not found" });
       }
 
-      const { OrderID, AgreedPrice } = result[0];
+      const { OrderID, AgreedPrice, cust_id } = result[0];
+      console.log(
+        "\nOrderID:", OrderID,
+        "\nAgreedPrice:", AgreedPrice,
+        "\ncust_id:", cust_id
+      );
 
       db.query(
-        "INSERT INTO bill (OrderID, Amount, userId) VALUES (?, ?, 0)",
-        [OrderID, AgreedPrice],
+        "INSERT INTO bill (OrderID, Amount, Status, userId) VALUES (?, ?, 'Pending', ?)",
+        [OrderID, AgreedPrice, cust_id],
         (err, result) => {
           if (err) {
             console.error("Error creating bill:", err.message);
@@ -423,7 +428,20 @@ app.post("/generate_bill", authenticateToken, (req, res) => {
               .json({ message: "Failed to create bill", error: err.message });
           }
 
-          res.status(201).json({ message: "Bill generated successfully" });
+          db.query(
+            "UPDATE orderofwork SET Status = 'Billed' WHERE QuoteRequestID = ?",
+            [quoteId],
+            (err, result) => {
+              if (err) {
+                console.error("Error updating order status:", err.message);
+                return res
+                  .status(500)
+                  .json({ message: "Failed to update order status", error: err.message });
+              }
+
+              res.status(201).json({ message: "Bill generated successfully" });
+            }
+          );
         }
       );
     }

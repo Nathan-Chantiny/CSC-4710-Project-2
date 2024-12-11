@@ -67,6 +67,24 @@ const Orders = () => {
     navigate("/login"); // Redirect to login page
   };
 
+  const handleBillAction = async (orderId) => {
+    const token = localStorage.getItem("token");
+
+    try {
+      await axios.post(
+        "http://localhost:5000/generate_bill",
+        { quoteId: orderId },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      alert("Bill generated!");
+      window.location.reload();
+    } catch (err) {
+      console.error("Error generating bill:", err.message);
+      alert("Failed to generate bill. Please try again.");
+    }
+  };
+
   //const handleCreateBill = async (e) => {};
 
   return (
@@ -201,7 +219,14 @@ const Orders = () => {
                 <p>Status: {order.Status}</p>
                 {/* Generate Bill */}
                 <div>
-                  <p>generate bill</p>
+                  {order.Status === "Pending" && (
+                    <button
+                      onClick={() => handleBillAction(order.QuoteRequestID)}
+                      style={{ marginRight: "10px", padding: "5px 10px" }}
+                    >
+                      Generate Bill
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
@@ -230,9 +255,7 @@ const Orders = () => {
           <div>
             {orders.map((specificOrder, index) => (
               <div key={index} style={{ marginBottom: "20px" }}>
-                <h1 style={h1Style}>
-                  {index + 1}. 
-                </h1>
+                <h1 style={h1Style}>{index + 1}.</h1>
                 <p>Work Period: {specificOrder.WorkPeriod}</p>
                 <p>Agreed Price: ${specificOrder.AgreedPrice}</p>
                 <p>Status: {specificOrder.Status}</p>
