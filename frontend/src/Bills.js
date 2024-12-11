@@ -1,14 +1,226 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
 import Strings from "./Strings";
+import { jwtDecode } from "jwt-decode"; // Updated import here
+
+axios.defaults.baseURL = "http://localhost:5000";
 
 const Bills = () => {
-  const token = localStorage.getItem("token"); // Check if the user is logged in
+  const [bills, setBills] = useState([]);
+  const [error, setError] = useState(null);
+  const [userId, setUserId] = useState(null);
+
+  useEffect(() => {
+    const fetchBills = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          setError("You must be logged in to view bills.");
+          return;
+        }
+
+        // Decode userId from the token using named export
+        const decoded = jwtDecode(token);
+        const currentUserId = decoded.userId;
+        setUserId(currentUserId);
+
+        const response = await axios.get("/api/getBills", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        console.log("API Response (Bills):", response.data);
+        setBills(response.data);
+      } catch (err) {
+        console.error("Error fetching bills:", err.response || err.message);
+        setError(
+          err.response?.data?.message || "Failed to load bills. Please try again."
+        );
+      }
+    };
+
+    fetchBills();
+  }, []);
+
+  const handleBillAction = async (action, billId) => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        alert("You must be logged in to perform this action.");
+        return;
+      }
+
+      await axios.post(
+        `/api/${action}/${billId}`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      alert(
+        `${action === "payBill" ? "Bill paid" : "Bill disputed"} successfully`
+      );
+      setBills((prevBills) =>
+        prevBills.map((bill) =>
+          bill.BillID === billId
+            ? {
+                ...bill,
+                Status: action === "payBill" ? "Paid" : "Disputed",
+              }
+            : bill
+        )
+      );
+    } catch (err) {
+      console.error(`Error ${action} bill:`, err);
+    }
+  };
+
+  return (
+    <div
+      className="bill-page"
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        fontFamily: "Arial, sans-serif",
+      }}
+    >
+      <main style={{ width: "100%", maxWidth: "800px" }}>
+        <h2
+          style={{
+            textAlign: "center",
+            marginBottom: "20px",
+            fontSize: "2rem",
+            color: "#333",
+          }}
+        >
+          Your Bills
+        </h2>
+        {error && (
+          <p style={{ color: "red", marginBottom: "20px", textAlign: "center" }}>
+            {error}
+          </p>
+        )}
+        <table
+          className="bill-table"
+          style={{
+            width: "100%",
+            borderCollapse: "collapse",
+            margin: "0 auto",
+            backgroundColor: "#f9f9f9",
+            boxShadow: "0 0 10px rgba(0,0,0,0.1)",
+          }}
+        >
+          <thead>
+            <tr
+              style={{
+                backgroundColor: "#007bff",
+                color: "#fff",
+                textAlign: "left",
+              }}
+            >
+              <th style={{ padding: "12px" }}>Bill ID</th>
+              <th style={{ padding: "12px" }}>Order ID</th>
+              <th style={{ padding: "12px" }}>Amount</th>
+              <th style={{ padding: "12px" }}>Status</th>
+              <th style={{ padding: "12px" }}>Note</th>
+              {/* Show User ID column only if userId is 0 */}
+              {userId === 0 && <th style={{ padding: "12px" }}>User ID</th>}
+              <th style={{ padding: "12px" }}>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {bills.length > 0 ? (
+              bills.map((bill) => (
+                <tr
+                  key={bill.BillID}
+                  style={{
+                    borderBottom: "1px solid #ddd",
+                    textAlign: "left",
+                    transition: "background-color 0.3s",
+                  }}
+                  onMouseEnter={(e) =>
+                    (e.currentTarget.style.backgroundColor = "#f1f1f1")
+                  }
+                  onMouseLeave={(e) =>
+                    (e.currentTarget.style.backgroundColor = "transparent")
+                  }
+                >
+                  <td style={{ padding: "12px" }}>{bill.BillID}</td>
+                  <td style={{ padding: "12px" }}>{bill.OrderID}</td>
+                  <td style={{ padding: "12px" }}>
+                    {bill.Amount && !isNaN(bill.Amount)
+                      ? `$${Number(bill.Amount).toFixed(2)}`
+                      : "N/A"}
+                  </td>
+                  <td style={{ padding: "12px" }}>{bill.Status || "Pending"}</td>
+                  <td style={{ padding: "12px" }}>{bill.Note || "N/A"}</td>
+                  {/* Show User ID only if userId is 0 */}
+                  {userId === 0 && (
+                    <td style={{ padding: "12px" }}>{bill.UserID || "N/A"}</td>
+                  )}
+                  <td style={{ padding: "12px" }}>
+                    {/* Show "Pay" and "Dispute" only if userId is NOT 0 */}
+                    {userId !== 0 && (
+                      <>
+                        <button
+                          onClick={() => handleBillAction("payBill", bill.BillID)}
+                          style={{
+                            padding: "6px 12px",
+                            marginRight: "10px",
+                            backgroundColor: "#28a745",
+                            color: "#fff",
+                            border: "none",
+                            borderRadius: "4px",
+                            cursor: "pointer",
+                          }}
+                        >
+                          Pay
+                        </button>
+                        <button
+                          onClick={() => handleBillAction("disputeBill", bill.BillID)}
+                          style={{
+                            padding: "6px 12px",
+                            backgroundColor: "#dc3545",
+                            color: "#fff",
+                            border: "none",
+                            borderRadius: "4px",
+                            cursor: "pointer",
+                          }}
+                        >
+                          Dispute
+                        </button>
+                      </>
+                    )}
+                  </td>
+                </tr>
+              ))
+            ) : (
+              !error && (
+                <tr>
+                  <td
+                    colSpan={userId === 0 ? "7" : "6"}
+                    style={{ padding: "12px", textAlign: "center", color: "#777" }}
+                  >
+                    No bills available
+                  </td>
+                </tr>
+              )
+            )}
+          </tbody>
+        </table>
+      </main>
+    </div>
+  );
+};
+
+const Bills = () => {
+  const token = localStorage.getItem("token");
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    localStorage.removeItem("token"); // Remove the JWT token from localStorage
-    navigate("/login"); // Redirect to login page
+    localStorage.removeItem("token");
+    navigate("/login");
   };
 
   return (
@@ -22,9 +234,8 @@ const Bills = () => {
         lineHeight: "1.6",
       }}
     >
-      {/* Header */}
       <header style={{ textAlign: "center", marginBottom: "30px" }}>
-        <h1 style={{ fontSize: "2.5rem", color: "#333" }}>Bills</h1>
+        <h1 style={{ fontSize: "2.5rem", color: "#333" }}>Bill Management</h1>
         <nav style={{ marginTop: "20px" }}>
           <ul
             style={{
@@ -35,292 +246,102 @@ const Bills = () => {
               gap: "20px",
             }}
           >
-            <li>
-              <Link
-                to="/"
-                style={{
-                  textDecoration: "none",
-                  fontSize: "1.2rem",
-                  color: "#007bff",
-                }}
-              >
-                {Strings.homePageName}
-              </Link>
-            </li>
-            {token && (
-              <li>
-                <Link
-                  to="/quote"
-                  style={{
-                    textDecoration: "none",
-                    fontSize: "1.2rem",
-                    color: "#007bff",
-                  }}
-                >
-                  {Strings.submitQuoteName}
-                </Link>
-              </li>
-            )}
-            {token && (
-              <li>
-                <Link
-                  to="/profile"
-                  style={{
-                    textDecoration: "none",
-                    fontSize: "1.2rem",
-                    color: "#007bff",
-                  }}
-                >
-                  {Strings.quoteName}
-                </Link>
-              </li>
-            )}
-            {token && (
-              <li>
-                <Link
-                  to="/orders"
-                  style={{
-                    textDecoration: "none",
-                    fontSize: "1.2rem",
-                    color: "#007bff",
-                  }}
-                >
-                  {Strings.ordersName}
-                </Link>
-              </li>
-            )}
-            {token && (
-              <li>
-                <button
-                  onClick={handleLogout}
-                  style={{
-                    textDecoration: "none",
-                    fontSize: "1.2rem",
-                    color: "#007bff",
-                  }}
-                >
-                  {Strings.logoutName}
-                </button>
-              </li>
+            {!token ? (
+              <>
+                <li>
+                  <Link
+                    to="/login"
+                    style={{
+                      textDecoration: "none",
+                      fontSize: "1.2rem",
+                      color: "#007bff",
+                    }}
+                  >
+                    {Strings.loginName}
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    to="/register"
+                    style={{
+                      textDecoration: "none",
+                      fontSize: "1.2rem",
+                      color: "#007bff",
+                    }}
+                  >
+                    {Strings.registerName}
+                  </Link>
+                </li>
+              </>
+            ) : (
+              <>
+                <li>
+                  <Link
+                    to="/quote"
+                    style={{
+                      textDecoration: "none",
+                      fontSize: "1.2rem",
+                      color: "#007bff",
+                    }}
+                  >
+                    {Strings.submitQuoteName}
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    to="/profile"
+                    style={{
+                      textDecoration: "none",
+                      fontSize: "1.2rem",
+                      color: "#007bff",
+                    }}
+                  >
+                    {Strings.quoteName}
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    to="/orders"
+                    style={{
+                      textDecoration: "none",
+                      fontSize: "1.2rem",
+                      color: "#007bff",
+                    }}
+                  >
+                    {Strings.ordersName}
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    to="/bills"
+                    style={{
+                      textDecoration: "none",
+                      fontSize: "1.2rem",
+                      color: "#007bff",
+                    }}
+                  >
+                    {Strings.billsName}
+                  </Link>
+                </li>
+                <li>
+                  <button
+                    onClick={handleLogout}
+                    style={{
+                      textDecoration: "none",
+                      fontSize: "1.2rem",
+                      color: "#007bff",
+                    }}
+                  >
+                    {Strings.logoutName}
+                  </button>
+                </li>
+              </>
             )}
           </ul>
         </nav>
       </header>
 
-      {/* Session Information Paragraph */}
-      <section style={{ marginBottom: "30px" }}>
-        <h2
-          style={{
-            fontSize: "2rem",
-            color: "#007bff",
-            textAlign: "center",
-            marginBottom: "20px",
-          }}
-        >
-          Understanding Sessions: Stateful vs. Stateless
-        </h2>
-        <p style={{ fontSize: "1.2rem", color: "#555", textAlign: "justify" }}>
-          A session is a temporary connection between a user and a system,
-          allowing the system to remember the user's activity. In a stateful
-          session, the server keeps track of the user's session by storing
-          information on the server side, using a session ID to recognize the
-          user with each request. On the other hand, in a stateless session, the
-          server does not store any session data. Instead, the user's data, such
-          as authentication information, is stored on the client side in a
-          token, like a JSON Web Token (JWT), which is sent with each request.
-          APIs typically use stateless sessions for scalability and simplicity,
-          since no session data is stored on the server.
-        </p>
-      </section>
-
-      {/* Main Content */}
-      <main>
-        {/* JWT Tutorial Section */}
-        <section style={{ marginBottom: "40px" }}>
-          <h2
-            style={{
-              fontSize: "2rem",
-              color: "#007bff",
-              textAlign: "center",
-              marginBottom: "20px",
-            }}
-          >
-            What is JWT (JSON Web Token)?
-          </h2>
-          <p
-            style={{ fontSize: "1.2rem", color: "#555", textAlign: "justify" }}
-          >
-            JSON Web Token (JWT) is an open standard (RFC 7519) that defines a
-            compact, URL-safe means of representing claims to be transferred
-            between two parties. The claims in a JWT are encoded as a JSON
-            object that is used for securely transmitting information between
-            parties. JWTs are commonly used for **authentication** in web
-            applications.
-          </p>
-          <p
-            style={{ fontSize: "1.2rem", color: "#555", textAlign: "justify" }}
-          >
-            A JWT is composed of three parts:
-          </p>
-          <ul
-            style={{ fontSize: "1.2rem", color: "#555", marginBottom: "20px" }}
-          >
-            <li>
-              <strong>Header</strong>: Contains metadata such as the type of
-              token and signing algorithm used (e.g., HMAC SHA256).
-            </li>
-            <li>
-              <strong>Payload</strong>: Contains the claims or data being
-              transmitted (e.g., user information like ID, username).
-            </li>
-            <li>
-              <strong>Signature</strong>: Used to verify that the token wasn’t
-              tampered with. It's created by taking the encoded header, encoded
-              payload, a secret, and the algorithm specified in the header.
-            </li>
-          </ul>
-        </section>
-
-        {/* How JWT Works Section with Image */}
-        <section style={{ marginBottom: "40px" }}>
-          <h2
-            style={{
-              fontSize: "2rem",
-              color: "#007bff",
-              textAlign: "center",
-              marginBottom: "20px",
-            }}
-          >
-            How JWT Works
-          </h2>
-          <p
-            style={{ fontSize: "1.2rem", color: "#555", textAlign: "justify" }}
-          >
-            Here’s a step-by-step breakdown of how JWT works in the context of
-            authentication:
-          </p>
-          <ul
-            style={{ fontSize: "1.2rem", color: "#555", marginBottom: "20px" }}
-          >
-            <li>
-              <strong>Step 1: User Login</strong> - The user enters their
-              credentials (username and password) and submits them to the server
-              via a login form.
-            </li>
-            <li>
-              <strong>Step 2: Server Generates JWT</strong> - If the credentials
-              are valid, the server generates a JWT and sends it back to the
-              client.
-            </li>
-            <li>
-              <strong>Step 3: Client Stores JWT</strong> - The client (browser
-              or app) stores the JWT, usually in **localStorage** or
-              **sessionStorage**.
-            </li>
-            <li>
-              <strong>Step 4: Client Sends JWT</strong> - For each subsequent
-              request to a protected route, the client sends the JWT in the
-              **Authorization** header.
-            </li>
-            <li>
-              <strong>Step 5: Server Verifies JWT</strong> - The server verifies
-              the JWT using a secret key. If valid, the server processes the
-              request and returns the response. If invalid or expired, the user
-              is denied access.
-            </li>
-          </ul>
-
-          {/* JWT Workflow Image */}
-          <div style={{ textAlign: "center", marginBottom: "20px" }}>
-            <figure>
-              <img
-                src="/jwtworkflow.jpeg"
-                alt="JWT Workflow Diagram"
-                style={{ maxWidth: "100%", height: "auto" }}
-              />
-              <figcaption
-                style={{
-                  marginTop: "10px",
-                  fontStyle: "italic",
-                  color: "#666",
-                }}
-              >
-                JWT Workflow Diagram. Image source:{" "}
-                <a
-                  href="https://www.wallarm.com/what/oauth-vs-jwt-detailed-comparison"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Wallarm
-                </a>
-                .
-              </figcaption>
-            </figure>
-          </div>
-        </section>
-
-        {/* Project Overview Section */}
-        <section style={{ marginBottom: "40px" }}>
-          <h2
-            style={{
-              fontSize: "2rem",
-              color: "#007bff",
-              textAlign: "center",
-              marginBottom: "20px",
-            }}
-          >
-            About This Project
-          </h2>
-          <p
-            style={{ fontSize: "1.2rem", color: "#555", textAlign: "justify" }}
-          >
-            This project is a simple demonstration of stateless authentication
-            using JWT. It includes:
-          </p>
-          <ul
-            style={{ fontSize: "1.2rem", color: "#555", marginBottom: "20px" }}
-          >
-            <li>
-              **Home Page**: This public page provides an overview of JWT and
-              explains how it works.
-            </li>
-            <li>
-              **Login**: Users can log in and receive a JWT, which is stored in
-              the browser.
-            </li>
-            <li>**Register**: New users can register and create an account.</li>
-            <li>
-              **Dashboard**: A protected page that can only be accessed with a
-              valid JWT.
-            </li>
-            <li>
-              **Profile Page**: Another protected page that displays user
-              information and can only be accessed with a valid JWT.
-            </li>
-          </ul>
-          <p
-            style={{ fontSize: "1.2rem", color: "#555", textAlign: "justify" }}
-          >
-            The project helps developers understand how stateless authentication
-            works using JWT and how it can be implemented in modern web
-            applications.
-          </p>
-        </section>
-      </main>
-
-      {/* Footer */}
-      <footer
-        style={{
-          textAlign: "center",
-          padding: "10px 0",
-          borderTop: "1px solid #ddd",
-          backgroundColor: "#f5f5f5",
-        }}
-      >
-        <p style={{ fontSize: "0.9rem", color: "#777" }}>
-          &copy; 2024 My Website. All rights reserved.
-        </p>
-      </footer>
+      <main>{token && <Bills />}</main>
     </div>
   );
 };

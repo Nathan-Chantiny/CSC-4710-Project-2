@@ -14,7 +14,7 @@ app.use(cors());
 
 // Create a MySQL connection
 const db = mysql.createConnection({
-  host: "localhost", // Database host, usually 'localhost' in local development
+  host: "localhost", // Database host, usually 'localhost'
   user: "root", // Default username in XAMPP
   password: "", // Leave blank if no password is set in XAMPP
   database: "jwt_auth_db", // Database name
@@ -48,10 +48,9 @@ app.post("/register", async (req, res) => {
     phone,
     email,
     password,
-  } = req.body; // Extract all required fields from request body
-  const hashedPassword = await bcrypt.hash(password, 10); // Hash the password using bcrypt with 10 salt rounds
+  } = req.body; 
+  const hashedPassword = await bcrypt.hash(password, 10);
 
-  // Insert the new user into the 'users' table
   db.query(
     "INSERT INTO users (first, last, address, cc_num, cc_name, cc_exp, cc_sec, bill_addr, phone, email, password) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
     [
@@ -71,88 +70,87 @@ app.post("/register", async (req, res) => {
       if (err) {
         return res
           .status(500)
-          .json({ message: "User registration failed", error: err }); // Send error response if registration fails
+          .json({ message: "User registration failed", error: err });
       }
-      res.status(201).json({ message: "User registered successfully" }); // Send success response
+      res.status(201).json({ message: "User registered successfully" });
     }
   );
 });
 
 // User login route
 app.post("/login", (req, res) => {
-  const { email, password } = req.body; // Extract email and password from request body
+  const { email, password } = req.body; 
 
-  // Query the database for the user with the provided email
   db.query(
     "SELECT * FROM users WHERE email = ?",
     [email],
     async (err, results) => {
       if (err) {
-        return res.status(500).json({ message: "Login failed", error: err }); // Send error response if query fails
+        return res.status(500).json({ message: "Login failed", error: err });
       }
 
       if (results.length === 0) {
-        return res.status(401).json({ message: "Invalid email or password" }); // Send error response if user not found
+        return res.status(401).json({ message: "Invalid email or password" });
       }
 
-      const user = results[0]; // Get the user record from the query result
-      const passwordMatch = await bcrypt.compare(password, user.password); // Compare the provided password with the hashed password
+      const user = results[0];
+      const passwordMatch = await bcrypt.compare(password, user.password);
 
       if (!passwordMatch) {
-        return res.status(401).json({ message: "Invalid email or password" }); // Send error response if password does not match
+        return res.status(401).json({ message: "Invalid email or password" });
       }
 
-      // Generate a JWT token with the user ID and a secret key, valid for 3 hour
       const token = jwt.sign({ userId: user.id }, "your_jwt_secret", {
         expiresIn: "3h",
       });
 
-      res.status(200).json({ message: "Login successful", token }); // Send success response with the token
+      res.status(200).json({ message: "Login successful", token });
     }
   );
 });
 
-// Middleware function to authenticate JWT tokens
+// Middleware to authenticate JWT tokens
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers["authorization"];
   const token = authHeader && authHeader.split(" ")[1];
 
-  if (token == null) return res.sendStatus(401);
+  if (token == null) {
+    console.error("No token provided");
+    return res.sendStatus(401);
+  }
 
   jwt.verify(token, "your_jwt_secret", (err, user) => {
-    if (err) return res.sendStatus(403);
+    if (err) {
+      console.error("Token verification failed:", err.message);
+      return res.sendStatus(403);
+    }
     req.user = user;
     next();
   });
 };
 
-// Protected route that requires JWT authentication
 app.get("/quote", authenticateToken, (req, res) => {
-  res.json({ message: "Welcome to the quote page. You are authenticated!" }); // Send a success message if authentication is valid
+  res.json({ message: "Welcome to the quote page. You are authenticated!" });
 });
 
-// Profile route
 app.get("/profile", authenticateToken, (req, res) => {
-  const userId = req.user.userId; // Extract userId from the decoded JWT token
+  const userId = req.user.userId;
 
-  // Query the database to get the user data based on the userId
   db.query(
     "SELECT first, last FROM users WHERE id = ?",
     [userId],
     (err, result) => {
       if (err || result.length === 0) {
-        return res.status(404).json({ message: "User not found" }); // Send error if user not found
+        return res.status(404).json({ message: "User not found" });
       }
 
-      // Send user profile data as response
       res.json({ first: result[0].first, last: result[0].last });
     }
   );
 });
 
-// Adds quote requests to the quotes table
 app.post("/add_quote", authenticateToken, (req, res) => {
-  const cust_id = req.user.userId; // Extract userId from the decoded JWT token
+  const cust_id = req.user.userId;
   const {
     address,
     square_feet,
@@ -163,9 +161,8 @@ app.post("/add_quote", authenticateToken, (req, res) => {
     picture_four,
     picture_five,
     note,
-  } = req.body; // Extract all required fields from request body
+  } = req.body;
 
-  // Query the database to insert the quote request
   db.query(
     "INSERT INTO quotes (cust_id, address, square_feet, price, picture_one, picture_two, picture_three, picture_four, picture_five, note, approval_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')",
     [
@@ -192,7 +189,6 @@ app.post("/add_quote", authenticateToken, (req, res) => {
   );
 });
 
-// Fetch all quotes with approval_status
 app.get("/quotes", authenticateToken, (req, res) => {
   const query = `
     SELECT quotes.*, users.first, users.last, users.phone, users.email 
@@ -207,12 +203,10 @@ app.get("/quotes", authenticateToken, (req, res) => {
   });
 });
 
-// Endpoint to update quote approval
 app.patch("/quote_approve", authenticateToken, (req, res) => {
   const { quoteId, approvalStatus, startDate, endDate, counterPrice } =
-    req.body; // Extract the quote ID and new approval status
+    req.body;
 
-  // Update the approval_status in the database
   db.query(
     "UPDATE quotes SET approval_status = ?, start_date = ?, end_date = ?, cost = ? WHERE quote_id = ?",
     [approvalStatus, startDate, endDate, counterPrice, quoteId],
@@ -227,11 +221,9 @@ app.patch("/quote_approve", authenticateToken, (req, res) => {
   );
 });
 
-// Endpoint to update quote denial
 app.patch("/quote_deny", authenticateToken, (req, res) => {
-  const { quoteId, approvalStatus, denyReason } = req.body; // Extract the quote ID and new approval status
+  const { quoteId, approvalStatus, denyReason } = req.body;
 
-  // Update the approval_status in the database
   db.query(
     "UPDATE quotes SET approval_status = ?, deny_reason = ? WHERE quote_id = ?",
     [approvalStatus, denyReason, quoteId],
@@ -246,12 +238,10 @@ app.patch("/quote_deny", authenticateToken, (req, res) => {
   );
 });
 
-// Endpoint to create an order of work
 app.post("/offer_accept", authenticateToken, (req, res) => {
   const user_id = req.user.userId;
   const { quoteId } = req.body;
 
-  // Fetch specific columns from the quotes table
   db.query(
     "SELECT price, cost, start_date, end_date FROM quotes WHERE quote_id = ?",
     [quoteId],
@@ -270,12 +260,10 @@ app.post("/offer_accept", authenticateToken, (req, res) => {
         return res.status(404).json({ message: "Quote not found" });
       }
 
-      // Extract the specific columns
       const { price, cost, start_date, end_date } = result[0];
       const workPeriod = `${start_date} to ${end_date}`;
       const agreedPrice = cost || price;
 
-      // Insert the order of work into the database
       db.query(
         "INSERT INTO orderofwork (QuoteRequestID, WorkPeriod, AgreedPrice, Status, cust_id) VALUES (?, ?, ?, 'In Progress', ?)",
         [quoteId, workPeriod, agreedPrice, user_id],
@@ -327,11 +315,9 @@ app.post("/offer_accept", authenticateToken, (req, res) => {
   );
 });
 
-// Endpoint to create an order of work
 app.patch("/offer_reject", authenticateToken, (req, res) => {
   const { quoteId, price, note, approval_status, start_date, end_date } = req.body;
 
-  // Insert the order of work into the database
   db.query(
     "UPDATE quotes SET price = ?, note = ?, approval_status = ?, start_date = ?, end_date = ? WHERE quote_id = ?",
     [price, note, approval_status, start_date, end_date, quoteId],
@@ -344,32 +330,25 @@ app.patch("/offer_reject", authenticateToken, (req, res) => {
       }
       res
         .status(201)
-        .json({ message: "Quote updated successfully successfully" });
+        .json({ message: "Quote updated successfully" });
     }
   );
 });
 
-// Endpoint to delete a quote
 app.patch("/quote_delete", authenticateToken, (req, res) => {
   const { quoteId } = req.body;
 
-  // Insert the order of work into the database
-  db.query(
-    "DELETE FROM quotes WHERE quote_id = ?",
-    [quoteId],
-    (err, result) => {
-      if (err) {
-        return res.status(500).json({
-          message: "Failed to delete quote",
-          error: err.message,
-        });
-      }
-      res.status(201).json({ message: "Quote deleted successfully" });
+  db.query("DELETE FROM quotes WHERE quote_id = ?", [quoteId], (err, result) => {
+    if (err) {
+      return res.status(500).json({
+        message: "Failed to delete quote",
+        error: err.message,
+      });
     }
-  );
+    res.status(201).json({ message: "Quote deleted successfully" });
+  });
 });
 
-// Fetch specific user's quotes
 app.get("/specific_quotes", authenticateToken, (req, res) => {
   const cust_id = req.user.userId;
 
@@ -381,19 +360,40 @@ app.get("/specific_quotes", authenticateToken, (req, res) => {
   });
 });
 
+// ** Updated Code for Fetching Bills **
+app.get('/api/getBills', authenticateToken, (req, res) => {
+  const userId = req.user.userId;
 
-// Route to generate a bill
+  let query = `
+    SELECT b.BillID, b.OrderID, b.Amount, b.Status, b.Note, b.userId AS UserID, o.WorkPeriod
+    FROM bill b
+    LEFT JOIN orderofwork o ON b.OrderID = o.OrderID
+  `;
+
+  // If the user is not userId: 0, they only see their own bills
+  if (userId !== 0) {
+    query += ' WHERE b.userId = ?';
+  }
+
+  db.query(query, userId !== 0 ? [userId] : [], (err, results) => {
+    if (err) {
+      console.error('Error fetching bills:', err.message);
+      return res.status(500).json({ message: 'Error fetching bills', error: err.message });
+    }
+    res.json(results);
+  });
+});
+
+
 app.post("/generate_bill", authenticateToken, (req, res) => {
   const { quoteId } = req.body;
   const userId = req.user.userId;
 
-  // Check if the user is David Smith
+  // Check if the user is David Smith (userId 0)
   if (userId !== 0) {
-    // 0 is the ID for David Smith
     return res.status(403).json({ message: "Unauthorized action" });
   }
 
-  // Find the order of work associated with the given QuoteRequestID
   db.query(
     "SELECT * FROM orderofwork WHERE QuoteRequestID = ?",
     [quoteId],
@@ -412,9 +412,8 @@ app.post("/generate_bill", authenticateToken, (req, res) => {
 
       const { OrderID, AgreedPrice } = result[0];
 
-      // Insert the bill into the database
       db.query(
-        "INSERT INTO bill (OrderID, Amount) VALUES (?, ?)",
+        "INSERT INTO bill (OrderID, Amount, userId) VALUES (?, ?, 0)",
         [OrderID, AgreedPrice],
         (err, result) => {
           if (err) {
@@ -466,3 +465,4 @@ app.post("/generate_bill", authenticateToken, (req, res) => {
       }
     );
   });
+});
