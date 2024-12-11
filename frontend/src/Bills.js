@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { jwtDecode } from "jwt-decode"; // Corrected import - just directly import without braces
+import { jwtDecode } from "jwt-decode";
 
 axios.defaults.baseURL = "http://localhost:5000";
 
@@ -177,7 +177,7 @@ const Bills = () => {
                     <td style={{ padding: "12px" }}>{bill.UserID || "N/A"}</td>
                   )}
                   <td style={{ padding: "12px" }}>
-                    {userId !== 0 && (
+                    {userId !== 0 && bill.Status === "Pending" && (
                       <>
                         <button
                           onClick={() => handleBillAction("payBill", bill.BillID)}
