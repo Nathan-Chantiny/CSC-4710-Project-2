@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
-import Strings from "./Strings";
-import { jwtDecode } from "jwt-decode"; // Updated import here
+import { jwtDecode } from "jwt-decode"; // Corrected import - just directly import without braces
 
 axios.defaults.baseURL = "http://localhost:5000";
 
@@ -20,7 +19,6 @@ const Bills = () => {
           return;
         }
 
-        // Decode userId from the token using named export
         const decoded = jwtDecode(token);
         const currentUserId = decoded.userId;
         setUserId(currentUserId);
@@ -42,30 +40,51 @@ const Bills = () => {
   }, []);
 
   const handleBillAction = async (action, billId) => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        alert("You must be logged in to perform this action.");
-        return;
-      }
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("You must be logged in to perform this action.");
+      return;
+    }
 
+    // If paying the bill, confirm first
+    if (action === "payBill") {
+      const confirmPayment = window.confirm(
+        "Are you sure you want to pay this bill using your stored payment information?"
+      );
+      if (!confirmPayment) return;
+    }
+
+    // If disputing the bill, prompt for note
+    let note = null;
+    if (action === "disputeBill") {
+      note = window.prompt("Please explain your concerns/complaints:");
+      // If user pressed Cancel, do nothing
+      if (note === null) return;
+    }
+
+    try {
+      const payload = note ? { note } : {};
       await axios.post(
         `/api/${action}/${billId}`,
-        {},
+        payload,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
 
-      alert(
-        `${action === "payBill" ? "Bill paid" : "Bill disputed"} successfully`
-      );
+      if (action === "payBill") {
+        alert("Bill successfully paid!");
+      } else if (action === "disputeBill") {
+        alert("Bill disputed successfully");
+      }
+
       setBills((prevBills) =>
         prevBills.map((bill) =>
           bill.BillID === billId
             ? {
                 ...bill,
                 Status: action === "payBill" ? "Paid" : "Disputed",
+                Note: note || bill.Note,
               }
             : bill
         )
@@ -124,7 +143,6 @@ const Bills = () => {
               <th style={{ padding: "12px" }}>Amount</th>
               <th style={{ padding: "12px" }}>Status</th>
               <th style={{ padding: "12px" }}>Note</th>
-              {/* Show User ID column only if userId is 0 */}
               {userId === 0 && <th style={{ padding: "12px" }}>User ID</th>}
               <th style={{ padding: "12px" }}>Actions</th>
             </tr>
@@ -155,12 +173,10 @@ const Bills = () => {
                   </td>
                   <td style={{ padding: "12px" }}>{bill.Status || "Pending"}</td>
                   <td style={{ padding: "12px" }}>{bill.Note || "N/A"}</td>
-                  {/* Show User ID only if userId is 0 */}
                   {userId === 0 && (
                     <td style={{ padding: "12px" }}>{bill.UserID || "N/A"}</td>
                   )}
                   <td style={{ padding: "12px" }}>
-                    {/* Show "Pay" and "Dispute" only if userId is NOT 0 */}
                     {userId !== 0 && (
                       <>
                         <button
@@ -257,7 +273,7 @@ const Bills = () => {
                       color: "#007bff",
                     }}
                   >
-                    {Strings.loginName}
+                    Login
                   </Link>
                 </li>
                 <li>
@@ -269,7 +285,7 @@ const Bills = () => {
                       color: "#007bff",
                     }}
                   >
-                    {Strings.registerName}
+                    Register
                   </Link>
                 </li>
               </>
@@ -284,7 +300,7 @@ const Bills = () => {
                       color: "#007bff",
                     }}
                   >
-                    {Strings.submitQuoteName}
+                    Submit Quote
                   </Link>
                 </li>
                 <li>
@@ -296,7 +312,7 @@ const Bills = () => {
                       color: "#007bff",
                     }}
                   >
-                    {Strings.quoteName}
+                    Profile
                   </Link>
                 </li>
                 <li>
@@ -308,7 +324,7 @@ const Bills = () => {
                       color: "#007bff",
                     }}
                   >
-                    {Strings.ordersName}
+                    Orders
                   </Link>
                 </li>
                 <li>
@@ -320,7 +336,7 @@ const Bills = () => {
                       color: "#007bff",
                     }}
                   >
-                    {Strings.billsName}
+                    Bills
                   </Link>
                 </li>
                 <li>
@@ -332,7 +348,7 @@ const Bills = () => {
                       color: "#007bff",
                     }}
                   >
-                    {Strings.logoutName}
+                    Logout
                   </button>
                 </li>
               </>
