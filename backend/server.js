@@ -1,4 +1,4 @@
-// Required dependencies
+// Updated server.js:
 const express = require("express");
 const mysql = require("mysql2");
 const bcrypt = require("bcrypt");
@@ -8,19 +8,16 @@ const cors = require("cors");
 
 const app = express();
 
-// Middleware to parse JSON data and handle CORS (Cross-Origin Resource Sharing)
 app.use(bodyParser.json());
 app.use(cors());
 
-// Create a MySQL connection
 const db = mysql.createConnection({
-  host: "localhost", // Database host, usually 'localhost'
-  user: "root", // Default username in XAMPP
-  password: "", // Leave blank if no password is set in XAMPP
-  database: "jwt_auth_db", // Database name
+  host: "localhost",
+  user: "root",
+  password: "",
+  database: "jwt_auth_db",
 });
 
-// Connect to the MySQL database
 db.connect((err) => {
   if (err) {
     console.error("Database connection failed:", err.stack);
@@ -29,12 +26,10 @@ db.connect((err) => {
   console.log("Connected to MySQL database.");
 });
 
-// Start the server and listen on port 5000
 app.listen(5000, () => {
   console.log("Server is running on port 5000");
 });
 
-// User registration route
 app.post("/register", async (req, res) => {
   const {
     first,
@@ -48,7 +43,7 @@ app.post("/register", async (req, res) => {
     phone,
     email,
     password,
-  } = req.body; 
+  } = req.body;
   const hashedPassword = await bcrypt.hash(password, 10);
 
   db.query(
@@ -77,39 +72,33 @@ app.post("/register", async (req, res) => {
   );
 });
 
-// User login route
 app.post("/login", (req, res) => {
-  const { email, password } = req.body; 
+  const { email, password } = req.body;
 
-  db.query(
-    "SELECT * FROM users WHERE email = ?",
-    [email],
-    async (err, results) => {
-      if (err) {
-        return res.status(500).json({ message: "Login failed", error: err });
-      }
-
-      if (results.length === 0) {
-        return res.status(401).json({ message: "Invalid email or password" });
-      }
-
-      const user = results[0];
-      const passwordMatch = await bcrypt.compare(password, user.password);
-
-      if (!passwordMatch) {
-        return res.status(401).json({ message: "Invalid email or password" });
-      }
-
-      const token = jwt.sign({ userId: user.id }, "your_jwt_secret", {
-        expiresIn: "3h",
-      });
-
-      res.status(200).json({ message: "Login successful", token });
+  db.query("SELECT * FROM users WHERE email = ?", [email], async (err, results) => {
+    if (err) {
+      return res.status(500).json({ message: "Login failed", error: err });
     }
-  );
+
+    if (results.length === 0) {
+      return res.status(401).json({ message: "Invalid email or password" });
+    }
+
+    const user = results[0];
+    const passwordMatch = await bcrypt.compare(password, user.password);
+
+    if (!passwordMatch) {
+      return res.status(401).json({ message: "Invalid email or password" });
+    }
+
+    const token = jwt.sign({ userId: user.id }, "your_jwt_secret", {
+      expiresIn: "3h",
+    });
+
+    res.status(200).json({ message: "Login successful", token });
+  });
 });
 
-// Middleware to authenticate JWT tokens
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers["authorization"];
   const token = authHeader && authHeader.split(" ")[1];
@@ -136,17 +125,13 @@ app.get("/quote", authenticateToken, (req, res) => {
 app.get("/profile", authenticateToken, (req, res) => {
   const userId = req.user.userId;
 
-  db.query(
-    "SELECT first, last FROM users WHERE id = ?",
-    [userId],
-    (err, result) => {
-      if (err || result.length === 0) {
-        return res.status(404).json({ message: "User not found" });
-      }
-
-      res.json({ first: result[0].first, last: result[0].last });
+  db.query("SELECT first, last FROM users WHERE id = ?", [userId], (err, result) => {
+    if (err || result.length === 0) {
+      return res.status(404).json({ message: "User not found" });
     }
-  );
+
+    res.json({ first: result[0].first, last: result[0].last });
+  });
 });
 
 app.post("/add_quote", authenticateToken, (req, res) => {
@@ -278,7 +263,6 @@ app.post("/offer_accept", authenticateToken, (req, res) => {
               });
           }
 
-          // Update the approval_status in the quotes table
           db.query(
             "UPDATE quotes SET approval_status = 'in progress' WHERE quote_id = ?",
             [quoteId],
@@ -302,7 +286,6 @@ app.post("/offer_accept", authenticateToken, (req, res) => {
                   });
               }
 
-              // Final response after all operations succeed
               res.status(201).json({
                 message:
                   "Order of work created and quote status updated successfully",
@@ -328,9 +311,7 @@ app.patch("/offer_reject", authenticateToken, (req, res) => {
           error: err.message,
         });
       }
-      res
-        .status(201)
-        .json({ message: "Quote updated successfully" });
+      res.status(201).json({ message: "Quote updated successfully" });
     }
   );
 });
@@ -360,7 +341,6 @@ app.get("/specific_quotes", authenticateToken, (req, res) => {
   });
 });
 
-// ** Updated Code for Fetching Bills **
 app.get('/api/getBills', authenticateToken, (req, res) => {
   const userId = req.user.userId;
 
@@ -370,7 +350,6 @@ app.get('/api/getBills', authenticateToken, (req, res) => {
     LEFT JOIN orderofwork o ON b.OrderID = o.OrderID
   `;
 
-  // If the user is not userId: 0, they only see their own bills
   if (userId !== 0) {
     query += ' WHERE b.userId = ?';
   }
@@ -384,12 +363,10 @@ app.get('/api/getBills', authenticateToken, (req, res) => {
   });
 });
 
-
 app.post("/generate_bill", authenticateToken, (req, res) => {
   const { quoteId } = req.body;
   const userId = req.user.userId;
 
-  // Check if the user is David Smith (userId 0)
   if (userId !== 0) {
     return res.status(403).json({ message: "Unauthorized action" });
   }
@@ -430,7 +407,6 @@ app.post("/generate_bill", authenticateToken, (req, res) => {
   );
 });
 
-// Route to pay a bill
 app.post("/api/payBill/:billId", authenticateToken, (req, res) => {
   const billId = req.params.billId;
   
@@ -450,10 +426,9 @@ app.post("/api/payBill/:billId", authenticateToken, (req, res) => {
   );
 });
 
-// Route to dispute a bill
 app.post("/api/disputeBill/:billId", authenticateToken, (req, res) => {
   const billId = req.params.billId;
-  const { note } = req.body; // Get the note from the request body
+  const { note } = req.body;
 
   db.query(
     "UPDATE bill SET Status = 'Dispute', Note = ? WHERE BillID = ?",
@@ -471,38 +446,64 @@ app.post("/api/disputeBill/:billId", authenticateToken, (req, res) => {
   );
 });
 
-// Fetch all orders
-  app.get("/orders", authenticateToken, (req, res) => {
-    const query = `
+app.post("/api/respondDispute/:billId", authenticateToken, (req, res) => {
+  const billId = req.params.billId;
+  const { note, amount } = req.body;
+  const userId = req.user.userId;
+
+  if (userId !== 0) {
+    return res.status(403).json({ message: "Unauthorized action" });
+  }
+
+  // Build query and params dynamically
+  let query = "UPDATE bill SET Note = ?, Status = 'Pending' ";
+  let params = [note, billId];
+
+  if (amount && amount.trim() !== "") {
+    query = "UPDATE bill SET Note = ?, Amount = ?, Status = 'Pending' WHERE BillID = ?";
+    params = [note, amount, billId];
+  } else {
+    query += "WHERE BillID = ?";
+  }
+
+  db.query(query, params, (err, result) => {
+    if (err) {
+      console.error("Error responding to dispute:", err);
+      return res.status(500).json({ message: "Failed to respond to dispute" });
+    }
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "Bill not found" });
+    }
+    res.json({ message: "Responded to dispute successfully" });
+  });
+});
+
+app.get("/orders", authenticateToken, (req, res) => {
+  const query = `
     SELECT orderofwork.*, users.first, users.last
     FROM orderofwork
     JOIN quotes ON orderofwork.QuoteRequestID = quotes.quote_id
     JOIN users ON quotes.cust_id = users.id
   `;
-    db.query(query, (err, result) => {
-      if (err) {
-        return res
-          .status(500)
-          .json({ message: "Error fetching orders", error: err.message });
-      }
-      res.json(result);
-    });
+  db.query(query, (err, result) => {
+    if (err) {
+      return res
+        .status(500)
+        .json({ message: "Error fetching orders", error: err.message });
+    }
+    res.json(result);
   });
+});
 
-  // Fetch specific user's orders
-  app.get("/specific_orders", authenticateToken, (req, res) => {
-    const user_id = req.user.userId;
+app.get("/specific_orders", authenticateToken, (req, res) => {
+  const user_id = req.user.userId;
 
-    db.query(
-      "SELECT * FROM orderofwork WHERE cust_id=?",
-      [user_id],
-      (err, result) => {
-        if (err) {
-          return res
-            .status(500)
-            .json({ message: "Error fetching orders", error: err });
-        }
-        res.json(result);
-      }
-    );
+  db.query("SELECT * FROM orderofwork WHERE cust_id=?", [user_id], (err, result) => {
+    if (err) {
+      return res
+        .status(500)
+        .json({ message: "Error fetching orders", error: err });
+    }
+    res.json(result);
   });
+});
