@@ -1,10 +1,29 @@
-import React from 'react';
+import React, { useState, useEffect } from "react";
+import { jwtDecode } from "jwt-decode";
 import { Link, useNavigate } from "react-router-dom";
 import Strings from "./Strings";
 
 const HomePage = () => {
-  const token = localStorage.getItem('token'); // Check if the user is logged in
+  const token = localStorage.getItem("token"); // Check if the user is logged in
   const navigate = useNavigate();
+
+  const [userId, setUserId] = useState(null);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const token = localStorage.getItem("token");
+
+        const decoded = jwtDecode(token);
+        const currentUserId = decoded.userId;
+        setUserId(currentUserId);
+      } catch (err) {
+        console.log("Error fetching user data:", err);
+      }
+    };
+
+    fetchUserData();
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem("token"); // Remove the JWT token from localStorage
@@ -65,7 +84,7 @@ const HomePage = () => {
                 </Link>
               </li>
             )}
-            {token && (
+            {token && !userId === 0 && (
               <li>
                 <Link
                   to="/quote"

@@ -225,7 +225,7 @@ const Profile = () => {
               {Strings.homePageName}
             </Link>
           </li>
-          {localStorage.getItem("token") && (
+          {localStorage.getItem("token") && !userId === 0 && (
             <li>
               <Link
                 to="/quote"
@@ -411,9 +411,7 @@ const Profile = () => {
               )
               .map((specificQuote, index) => (
                 <div key={index} style={{ marginBottom: "20px" }}>
-                  <h1 style={h1Style}>
-                    {index + 1}.
-                  </h1>
+                  <h1 style={h1Style}>{index + 1}.</h1>
                   <p>Address: {specificQuote.address}</p>
                   <p>Square Feet: {specificQuote.square_feet}</p>
                   <p>Price: {specificQuote.price}</p>

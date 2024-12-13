@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
+import Strings from "./Strings";
 
 axios.defaults.baseURL = "http://localhost:5000";
 
@@ -302,8 +303,25 @@ const Bills = () => {
 };
 
 const HomePage = () => {
-  const token = localStorage.getItem("token");
   const navigate = useNavigate();
+  const token = localStorage.getItem("token");
+  const [userId, setUserId] = useState(null);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const token = localStorage.getItem("token");
+
+        const decoded = jwtDecode(token);
+        const currentUserId = decoded.userId;
+        setUserId(currentUserId);
+      } catch (err) {
+        console.log("Error fetching user data:", err);
+      }
+    };
+
+    fetchUserData();
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -344,7 +362,7 @@ const HomePage = () => {
                       color: "#007bff",
                     }}
                   >
-                    Login
+                    {Strings.loginName}
                   </Link>
                 </li>
                 <li>
@@ -356,12 +374,25 @@ const HomePage = () => {
                       color: "#007bff",
                     }}
                   >
-                    Register
+                    {Strings.registerName}
                   </Link>
                 </li>
               </>
             ) : (
               <>
+                <li>
+                  <Link
+                    to="/"
+                    style={{
+                      textDecoration: "none",
+                      fontSize: "1.2rem",
+                      color: "#007bff",
+                    }}
+                  >
+                    {Strings.homePageName}
+                  </Link>
+                </li>
+                {!userId === 0 && (
                 <li>
                   <Link
                     to="/quote"
@@ -371,9 +402,10 @@ const HomePage = () => {
                       color: "#007bff",
                     }}
                   >
-                    Submit Quote
+                    {Strings.submitQuoteName}
                   </Link>
                 </li>
+                  )}
                 <li>
                   <Link
                     to="/profile"
@@ -383,7 +415,7 @@ const HomePage = () => {
                       color: "#007bff",
                     }}
                   >
-                    Profile
+                    {Strings.quoteName}
                   </Link>
                 </li>
                 <li>
@@ -395,19 +427,7 @@ const HomePage = () => {
                       color: "#007bff",
                     }}
                   >
-                    Orders
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    to="/bills"
-                    style={{
-                      textDecoration: "none",
-                      fontSize: "1.2rem",
-                      color: "#007bff",
-                    }}
-                  >
-                    Bills
+                    {Strings.ordersName}
                   </Link>
                 </li>
                 <li>
@@ -419,7 +439,7 @@ const HomePage = () => {
                       color: "#007bff",
                     }}
                   >
-                    Logout
+                    {Strings.logoutName}
                   </button>
                 </li>
               </>

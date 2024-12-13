@@ -125,7 +125,7 @@ const Orders = () => {
                 {Strings.homePageName}
               </Link>
             </li>
-            {token && (
+            {token && !userId === 0 && (
               <li>
                 <Link
                   to="/quote"
