@@ -225,7 +225,7 @@ const Profile = () => {
               {Strings.homePageName}
             </Link>
           </li>
-          {localStorage.getItem("token") && !userId === 0 && (
+          {localStorage.getItem("token") && userId !== 0 && (
             <li>
               <Link
                 to="/quote"

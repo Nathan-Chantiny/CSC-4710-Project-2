@@ -392,7 +392,7 @@ const HomePage = () => {
                     {Strings.homePageName}
                   </Link>
                 </li>
-                {!userId === 0 && (
+                {userId !== 0 && (
                 <li>
                   <Link
                     to="/quote"

@@ -84,7 +84,7 @@ const HomePage = () => {
                 </Link>
               </li>
             )}
-            {token && !userId === 0 && (
+            {token && userId !== 0 && (
               <li>
                 <Link
                   to="/quote"
