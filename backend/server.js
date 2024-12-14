@@ -525,3 +525,19 @@ app.get("/specific_orders", authenticateToken, (req, res) => {
     res.json(result);
   });
 });
+
+app.get("/big_clients", authenticateToken, (req, res) => {});
+
+app.get("/difficult_clients", authenticateToken, (req, res) => {});
+
+app.get("/this_month_quotes", authenticateToken, (req, res) => {});
+
+app.get("/prospective_clients", authenticateToken, (req, res) => {});
+
+app.get("/largest_driveway", authenticateToken, (req, res) => {});
+
+app.get("/overdue_bills", authenticateToken, (req, res) => {});
+
+app.get("/bad_clients", authenticateToken, (req, res) => {});
+
+app.get("/good_clients", authenticateToken, (req, res) => {});
