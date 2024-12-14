@@ -4,21 +4,37 @@ import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import Strings from "./Strings";
 
-const Three = () => {};
+const Three = () => {
+    {/* BIG CLIENTS */}
+};
 
-const Four = () => {};
+const Four = () => {
+    {/* DIFFICULT CLIENTS */}
+};
 
-const Five = () => {};
+const Five = () => {
+    {/* THIS MONTH QUOTES */}
+};
 
-const Six = () => {};
+const Six = () => {
+    {/* PROSPECTIVE CLIENTS */}
+};
 
-const Seven = () => {};
+const Seven = () => {
+    {/* LARGEST DRIVEWAY */}
+};
 
-const Eight = () => {};
+const Eight = () => {
+    {/* OVERDUE BILLS */}
+};
 
-const Nine = () => {};
+const Nine = () => {
+    {/* BAD CLIENTS */}
+};
 
-const Ten = () => {};
+const Ten = () => {
+    {/* GOOD CLIENTS */}
+};
 
 const Queries = () => {
     return (
