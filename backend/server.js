@@ -250,7 +250,7 @@ app.post("/offer_accept", authenticateToken, (req, res) => {
       const agreedPrice = cost || price;
 
       db.query(
-        "INSERT INTO orderofwork (QuoteRequestID, WorkPeriod, AgreedPrice, Status, cust_id) VALUES (?, ?, ?, 'Pending', ?)",
+        "INSERT INTO orderofwork (QuoteRequestID, WorkPeriod, AgreedPrice, Status, cust_id, accept_date) VALUES (?, ?, ?, 'Pending', ?, CURRENT_DATE)",
         [quoteId, workPeriod, agreedPrice, user_id],
         (err, result) => {
           if (err) {
@@ -395,7 +395,7 @@ app.post("/generate_bill", authenticateToken, (req, res) => {
       );
 
       db.query(
-        "INSERT INTO bill (OrderID, Amount, Status, userId) VALUES (?, ?, 'Pending', ?)",
+        "INSERT INTO bill (OrderID, Amount, Status, userId, create_date) VALUES (?, ?, 'Pending', ?, CURRENT_DATE)",
         [OrderID, AgreedPrice, cust_id],
         (err, result) => {
           if (err) {
@@ -526,18 +526,496 @@ app.get("/specific_orders", authenticateToken, (req, res) => {
   });
 });
 
-app.get("/big_clients", authenticateToken, (req, res) => {});
+// Big Clients Endpoint
+{/*
+  EXAMPLE OUTPUT:
+  [
+    {
+        "cust_id": 1,
+        "first_name": "John",
+        "last_name": "Doe",
+        "order_count": 10
+    },
+    {
+        "cust_id": 2,
+        "first_name": "Alice",
+        "last_name": "Smith",
+        "order_count": 10
+    }
+]
+  */}
+app.get("/big_clients", authenticateToken, (req, res) => {
+    const query = `
+        WITH CompletedOrders AS (
+            SELECT 
+                cust_id, 
+                COUNT(OrderID) AS order_count
+            FROM 
+                orderofwork
+            WHERE 
+                Status = 'Billed'
+            GROUP BY 
+                cust_id
+        ),
+        MaxOrders AS (
+            SELECT 
+                MAX(order_count) AS max_count
+            FROM 
+                CompletedOrders
+        )
+        SELECT 
+            u.first AS first_name,
+            u.last AS last_name,
+            c.cust_id,
+            c.order_count
+        FROM 
+            CompletedOrders c
+        INNER JOIN 
+            users u ON c.cust_id = u.id
+        CROSS JOIN 
+            MaxOrders m
+        WHERE 
+            c.order_count = m.max_count;
+    `;
 
-app.get("/difficult_clients", authenticateToken, (req, res) => {});
+    db.query(query, (err, results) => {
+        if (err) {
+            console.error("Database error:", err);
+            return res.status(500).json({ error: "Database query failed" });
+        }
 
-app.get("/this_month_quotes", authenticateToken, (req, res) => {});
+        if (results.length === 0) {
+            return res.status(404).json({ message: "No big clients found" });
+        }
 
-app.get("/prospective_clients", authenticateToken, (req, res) => {});
+        res.json(results); // Send the query result as the response
+    });
+});
 
-app.get("/largest_driveway", authenticateToken, (req, res) => {});
+// Difficult Clients Endpoint
+{/*
+  EXAMPLE OUTPUT:
+  [
+    {
+        "client_id": 1,
+        "first_name": "John",
+        "last_name": "Doe",
+        "phone": "1234567890",
+        "email": "johndoe@example.com",
+        "request_count": 3
+    },
+    {
+        "client_id": 2,
+        "first_name": "Jane",
+        "last_name": "Smith",
+        "phone": "9876543210",
+        "email": "janesmith@example.com",
+        "request_count": 3
+    }
+]
+  */}
+app.get("/difficult_clients", authenticateToken, (req, res) => {
+  const query = `
+        WITH ApprovedQuotes AS (
+            SELECT 
+                cust_id, 
+                COUNT(DISTINCT quote_id) AS request_count
+            FROM 
+                quotes
+            WHERE 
+                approval_status = 'approved'
+            GROUP BY 
+                cust_id
+        ),
+        DifficultClients AS (
+            SELECT 
+                cust_id
+            FROM 
+                ApprovedQuotes
+            WHERE 
+                request_count = 3
+        )
+        SELECT 
+            u.id AS client_id,
+            u.first AS first_name,
+            u.last AS last_name,
+            u.phone,
+            u.email,
+            aq.request_count
+        FROM 
+            users u
+        INNER JOIN 
+            ApprovedQuotes aq ON u.id = aq.cust_id
+        WHERE 
+            aq.request_count = 3;
+    `;
 
-app.get("/overdue_bills", authenticateToken, (req, res) => {});
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error("Database error:", err);
+      return res.status(500).json({ error: "Database query failed" });
+    }
 
-app.get("/bad_clients", authenticateToken, (req, res) => {});
+    if (results.length === 0) {
+      return res.status(404).json({ message: "No difficult clients found" });
+    }
 
-app.get("/good_clients", authenticateToken, (req, res) => {});
+    res.json(results); // Send the query result as the response
+  });
+});
+
+// This Month Quotes Endpoint
+{/*
+  EXAMPLE OUTPUT:
+  [
+    {
+        "OrderID": 101,
+        "QuoteRequestID": 202,
+        "WorkPeriod": "2 weeks",
+        "AgreedPrice": 1500.00,
+        "Status": "Accepted",
+        "cust_id": 12,
+        "accept_date": "2024-12-05"
+    },
+    {
+        "OrderID": 102,
+        "QuoteRequestID": 203,
+        "WorkPeriod": "1 week",
+        "AgreedPrice": 800.00,
+        "Status": "Billed",
+        "cust_id": 15,
+        "accept_date": "2024-12-12"
+    }
+]
+  */}
+app.get("/this_month_quotes", authenticateToken, (req, res) => {
+    const query = `
+        SELECT 
+            OrderID, 
+            QuoteRequestID, 
+            WorkPeriod, 
+            AgreedPrice, 
+            Status, 
+            cust_id, 
+            accept_date
+        FROM 
+            orderofwork
+        WHERE 
+            MONTH(accept_date) = MONTH(CURRENT_DATE())
+            AND YEAR(accept_date) = YEAR(CURRENT_DATE());
+    `;
+
+    db.query(query, (err, results) => {
+        if (err) {
+            console.error("Database error:", err);
+            return res.status(500).json({ error: "Database query failed" });
+        }
+
+        if (results.length === 0) {
+            return res.status(404).json({ message: "No quotes found for this month" });
+        }
+
+        res.json(results); // Send the query result as the response
+    });
+});
+
+// Prospective Clients Endpoint
+{/*
+  EXAMPLE OUTPUT:
+  [
+    {
+        "client_id": 2,
+        "first_name": "Alice",
+        "last_name": "Johnson",
+        "phone": "1234567890",
+        "email": "alicejohnson@example.com"
+    },
+    {
+        "client_id": 3,
+        "first_name": "Bob",
+        "last_name": "Brown",
+        "phone": "1234567890",
+        "email": "bobbrown@example.com"
+    }
+]
+  */}
+app.get("/prospective_clients", authenticateToken, (req, res) => {
+  const query = `
+        SELECT 
+            u.id AS client_id, 
+            u.first AS first_name, 
+            u.last AS last_name,
+            u.phone, 
+            u.email
+        FROM 
+            users u
+        LEFT JOIN 
+            quotes q
+        ON 
+            u.id = q.cust_id
+        WHERE 
+            q.cust_id IS NULL;
+            AND u.id != 0;
+    `;
+
+    db.query(query, (err, results) => {
+        if (err) {
+            console.error("Database error:", err);
+            return res.status(500).json({ error: "Database query failed" });
+        }
+
+        if (results.length === 0) {
+            return res.status(404).json({ message: "No clients without quotes found" });
+        }
+
+        res.json(results); // Send the query result as the response
+    });
+});
+
+// Largest Driveway Endpoint
+{/*
+  EXAMPLE OUTPUT:
+  [
+    {
+        "address": "456 Oak Ave",
+        "square_feet": 3000
+    },
+    {
+        "address": "789 Pine Dr",
+        "square_feet": 3000
+    }
+]
+  */}
+app.get("/largest_driveway", authenticateToken, (req, res) => {
+    const query = `
+        WITH MaxSquareFeet AS (
+            SELECT 
+                MAX(square_feet) AS max_square_feet
+            FROM 
+                quotes
+        ),
+        LargestDriveways AS (
+            SELECT 
+                address, 
+                square_feet
+            FROM 
+                quotes
+            WHERE 
+                square_feet = (SELECT max_square_feet FROM MaxSquareFeet)
+        )
+        SELECT 
+            address, 
+            square_feet
+        FROM 
+            LargestDriveways;
+    `;
+
+    db.query(query, (err, results) => {
+        if (err) {
+            console.error("Database error:", err);
+            return res.status(500).json({ error: "Database query failed" });
+        }
+
+        if (results.length === 0) {
+            return res.status(404).json({ message: "No driveways found" });
+        }
+
+        res.json(results); // Send the query result as the response
+    });
+});
+
+// Overdue Bills Endpoint
+{/*
+  EXAMPLE OUTPUT:
+  [
+    {
+        "BillID": 101,
+        "OrderID": 202,
+        "Amount": 500.00,
+        "Status": "Pending",
+        "create_date": "2024-12-01",
+        "first_name": "John",
+        "last_name": "Doe",
+        "phone": "1234567890",
+        "email": "johndoe@example.com"
+    },
+    {
+        "BillID": 102,
+        "OrderID": 203,
+        "Amount": 300.00,
+        "Status": "Dispute",
+        "create_date": "2024-12-02",
+        "first_name": "Jane",
+        "last_name": "Smith",
+        "phone": "9876543210",
+        "email": "janesmith@example.com"
+    }
+]
+  */}
+app.get("/overdue_bills", authenticateToken, (req, res) => {
+    const query = `
+        SELECT 
+            b.BillID,
+            b.OrderID,
+            b.Amount,
+            b.Status,
+            b.create_date,
+            u.first AS first_name,
+            u.last AS last_name,
+            u.phone,
+            u.email
+        FROM 
+            bill b
+        INNER JOIN 
+            users u ON b.userId = u.id
+        WHERE 
+            b.Status != 'Paid'
+            AND b.create_date <= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY);
+    `;
+
+    db.query(query, (err, results) => {
+        if (err) {
+            console.error("Database error:", err);
+            return res.status(500).json({ error: "Database query failed" });
+        }
+
+        if (results.length === 0) {
+            return res.status(404).json({ message: "No overdue bills found" });
+        }
+
+        res.json(results); // Send the query result as the response
+    });
+});
+
+// Bad Clients Endpoint
+{/*
+  EXAMPLE OUTPUT:
+  [
+    {
+        "client_id": 1,
+        "first_name": "John",
+        "last_name": "Doe",
+        "phone": "1234567890",
+        "email": "johndoe@example.com",
+        "total_due": 1500.00
+    },
+    {
+        "client_id": 3,
+        "first_name": "Jane",
+        "last_name": "Smith",
+        "phone": "9876543210",
+        "email": "janesmith@example.com",
+        "total_due": 750.00
+    }
+]
+  */}
+app.get("/bad_clients", authenticateToken, (req, res) => {
+    const query = `
+        WITH OverdueBills AS (
+            SELECT 
+                userId,
+                SUM(Amount) AS total_due
+            FROM 
+                bill
+            WHERE 
+                create_date <= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)
+                AND Status != 'Paid'
+            GROUP BY 
+                userId
+        ),
+        BadClients AS (
+            SELECT 
+                u.id AS client_id,
+                u.first AS first_name,
+                u.last AS last_name,
+                u.phone,
+                u.email,
+                COALESCE(ob.total_due, 0) AS total_due
+            FROM 
+                users u
+            LEFT JOIN 
+                OverdueBills ob ON u.id = ob.userId
+            WHERE 
+                u.id NOT IN (
+                    SELECT DISTINCT userId 
+                    FROM bill 
+                    WHERE create_date <= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)
+                    AND Status = 'Paid'
+                )
+            AND u.id IN (SELECT userId FROM bill)
+        )
+        SELECT 
+            client_id, 
+            first_name, 
+            last_name, 
+            phone, 
+            email, 
+            total_due
+        FROM 
+            BadClients;
+    `;
+
+    db.query(query, (err, results) => {
+        if (err) {
+            console.error("Database error:", err);
+            return res.status(500).json({ error: "Database query failed" });
+        }
+
+        if (results.length === 0) {
+            return res.status(404).json({ message: "No bad clients found" });
+        }
+
+        res.json(results); // Send the query result as the response
+    });
+});
+
+// Good Clients Endpoint
+{/*
+  EXAMPLE OUTPUT:
+  [
+    {
+        "client_id": 1,
+        "first_name": "Alice",
+        "last_name": "Johnson",
+        "phone": "1234567890",
+        "email": "alicejohnson@example.com"
+    },
+    {
+        "client_id": 2,
+        "first_name": "Bob",
+        "last_name": "Brown",
+        "phone": "9876543210",
+        "email": "bobbrown@example.com"
+    }
+]
+  */}
+app.get("/good_clients", authenticateToken, (req, res) => {
+    const query = `
+        SELECT 
+            DISTINCT u.id AS client_id,
+            u.first AS first_name,
+            u.last AS last_name,
+            u.phone,
+            u.email
+        FROM 
+            users u
+        INNER JOIN 
+            bill b ON u.id = b.userId
+        WHERE 
+            b.Status = 'Paid'
+            AND DATEDIFF(CURRENT_DATE(), b.create_date) <= 1;
+    `;
+
+    db.query(query, (err, results) => {
+        if (err) {
+            console.error("Database error:", err);
+            return res.status(500).json({ error: "Database query failed" });
+        }
+
+        if (results.length === 0) {
+            return res.status(404).json({ message: "No good clients found" });
+        }
+
+        res.json(results); // Send the query result as the response
+    });
+});
