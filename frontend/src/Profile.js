@@ -269,6 +269,20 @@ const Profile = () => {
           )}
           {localStorage.getItem("token") && (
             <li>
+              <Link
+                to="/queries"
+                style={{
+                  textDecoration: "none",
+                  fontSize: "1.2rem",
+                  color: "#007bff",
+                }}
+              >
+                {Strings.queriesName}
+              </Link>
+            </li>
+          )}
+          {localStorage.getItem("token") && (
+            <li>
               <button
                 onClick={handleLogout}
                 style={{

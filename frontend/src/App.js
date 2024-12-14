@@ -6,8 +6,9 @@ import Register from './Register';  // Importing the Register component
 import Quote from "./Quote";  // Importing the Quote component
 import Profile from './Profile';  // Importing the Profile component
 import Requote from './Requote';  // Importing the Requote component
-import Bills from './Bills';  // Importing the Requote component
-import Orders from './Orders';  // Importing the Requote component
+import Bills from './Bills';  // Importing the Bills component
+import Orders from './Orders'; // Importing the Orders component
+import Queries from './Queries'; // Importing the Orders component
 import PrivateRoute from './PrivateRoute';  // Importing the PrivateRoute component for protected routes
 
 function App() {
@@ -21,6 +22,7 @@ function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/queries" element={<Queries />} />
         {/* Private Routes */}
         <Route
           path="/quote"

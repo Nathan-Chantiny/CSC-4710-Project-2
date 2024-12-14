@@ -7,6 +7,7 @@ const strings = {
   registerName: "Register",
   logoutName: "Logout",
   ordersName: "Orders",
+  queriesName: "Queries",
 };
 
 export default strings;

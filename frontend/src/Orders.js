@@ -169,6 +169,20 @@ const Orders = () => {
             )}
             {token && (
               <li>
+                <Link
+                  to="/queries"
+                  style={{
+                    textDecoration: "none",
+                    fontSize: "1.2rem",
+                    color: "#007bff",
+                  }}
+                >
+                  {Strings.queriesName}
+                </Link>
+              </li>
+            )}
+            {token && (
+              <li>
                 <button
                   onClick={handleLogout}
                   style={{
