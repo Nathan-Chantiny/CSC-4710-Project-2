@@ -31,7 +31,6 @@ const Quote = () => {
     // Check token validity
     try {
       const decodedToken = jwtDecode(token);
-      console.log("Decoded Token:", decodedToken);
       const currentTime = Date.now() / 1000;
       if (decodedToken.exp < currentTime) {
         console.error("Token has expired");
@@ -44,51 +43,34 @@ const Quote = () => {
       setError("User is not authenticated. Please log in again.");
       return;
     }
-    
-    console.log("Submitting with data:", {
-      address,
-      square_feet: squareFeet,
-      price,
-      picture_one: pictureOne,
-      picture_two: pictureTwo,
-      picture_three: pictureThree,
-      picture_four: pictureFour,
-      picture_five: pictureFive,
-      note,
-    });
+
+    const formData = new FormData();
+    formData.append("address", address);
+    formData.append("square_feet", squareFeet);
+    formData.append("price", price);
+    formData.append("note", note);
+    formData.append("picture_one", pictureOne);
+    formData.append("picture_two", pictureTwo);
+    formData.append("picture_three", pictureThree);
+    formData.append("picture_four", pictureFour);
+    formData.append("picture_five", pictureFive);
 
     try {
-      const res = await axios.post(
-        "http://localhost:5000/add_quote",
-        {
-          address,
-          square_feet: squareFeet,
-          price,
-          picture_one: pictureOne,
-          picture_two: pictureTwo,
-          picture_three: pictureThree,
-          picture_four: pictureFour,
-          picture_five: pictureFive,
-          note,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+    const res = await axios.post("http://localhost:5000/add_quote", formData, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "multipart/form-data",
+      },
+    });
 
-      if (res.status === 201) {
-        navigate("/");
-      }
-    } catch (err) {
-      console.error("Error during submission:", err.response || err.message);
-      if (err.response && err.response.data) {
-        console.error("Backend error message:", err.response.data.message);
-      }
-      setError("Quote request failed. Please try again.");
+    if (res.status === 201) {
+      navigate("/");
     }
-  };
+  } catch (err) {
+    console.error("Error during submission:", err.response || err.message);
+    setError("Quote request failed. Please try again.");
+  }
+};
 
   const handleLogout = () => {
     localStorage.removeItem("token"); // Remove the JWT token from localStorage
@@ -247,50 +229,50 @@ const Quote = () => {
         <div className="form-group">
           <label>Picture One:</label>
           <input
-            type="text"
-            placeholder="Picture One"
-            value={pictureOne}
-            onChange={(e) => setPictureOne(e.target.value)}
+            type="file"
+            //placeholder="Picture One"
+            //value={pictureOne}
+            onChange={(e) => setPictureOne(e.target.files[0])}
             required
           />
         </div>
         <div className="form-group">
           <label>Picture Two:</label>
           <input
-            type="text"
-            placeholder="Picture Two"
-            value={pictureTwo}
-            onChange={(e) => setPictureTwo(e.target.value)}
+            type="file"
+            //placeholder="Picture Two"
+            //value={pictureTwo}
+            onChange={(e) => setPictureTwo(e.target.files[0])}
             required
           />
         </div>
         <div className="form-group">
           <label>Picture Three:</label>
           <input
-            type="text"
-            placeholder="Picture Three"
-            value={pictureThree}
-            onChange={(e) => setPictureThree(e.target.value)}
+            type="file"
+            //placeholder="Picture Three"
+            //value={pictureThree}
+            onChange={(e) => setPictureThree(e.target.files[0])}
             required
           />
         </div>
         <div className="form-group">
           <label>Picture Four:</label>
           <input
-            type="text"
-            placeholder="Picture Four"
-            value={pictureFour}
-            onChange={(e) => setPictureFour(e.target.value)}
+            type="file"
+            //placeholder="Picture Four"
+            //value={pictureFour}
+            onChange={(e) => setPictureFour(e.target.files[0])}
             required
           />
         </div>
         <div className="form-group">
           <label>Picture Five:</label>
           <input
-            type="text"
-            placeholder="Picture Five"
-            value={pictureFive}
-            onChange={(e) => setPictureFive(e.target.value)}
+            type="file"
+            //placeholder="Picture Five"
+            //value={pictureFive}
+            onChange={(e) => setPictureFive(e.target.files[0])}
             required
           />
         </div>

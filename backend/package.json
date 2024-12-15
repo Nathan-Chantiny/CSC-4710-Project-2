@@ -16,6 +16,7 @@
     "eslint-plugin-react-hooks": "^5.2.0-canary-4dff0e62-20241213",
     "express": "^4.21.1",
     "jsonwebtoken": "^9.0.2",
+    "multer": "^1.4.5-lts.1",
     "mysql2": "^3.11.3"
   }
 }

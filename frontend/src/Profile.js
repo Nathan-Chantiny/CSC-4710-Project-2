@@ -354,6 +354,64 @@ const Profile = () => {
                   <p>Price: {quote.price}</p>
                   <p>Note: {quote.note}</p>
                   <p>Approval Status: {quote.approval_status}</p>{" "}
+                  {/* Render Images */}
+                  <div>
+                    {quote.picture_one && (
+                      <img
+                        src={`http://localhost:5000/images/${quote.picture_one}`}
+                        alt="One"
+                        style={{
+                          width: "100px",
+                          height: "100px",
+                          margin: "10px",
+                        }}
+                      />
+                    )}
+                    {quote.picture_two && (
+                      <img
+                        src={`http://localhost:5000/images/${quote.picture_two}`}
+                        alt="Two"
+                        style={{
+                          width: "100px",
+                          height: "100px",
+                          margin: "10px",
+                        }}
+                      />
+                    )}
+                    {quote.picture_three && (
+                      <img
+                        src={`http://localhost:5000/images/${quote.picture_three}`}
+                        alt="Three"
+                        style={{
+                          width: "100px",
+                          height: "100px",
+                          margin: "10px",
+                        }}
+                      />
+                    )}
+                    {quote.picture_four && (
+                      <img
+                        src={`http://localhost:5000/images/${quote.picture_four}`}
+                        alt="Four"
+                        style={{
+                          width: "100px",
+                          height: "100px",
+                          margin: "10px",
+                        }}
+                      />
+                    )}
+                    {quote.picture_five && (
+                      <img
+                        src={`http://localhost:5000/images/${quote.picture_five}`}
+                        alt="Five"
+                        style={{
+                          width: "100px",
+                          height: "100px",
+                          margin: "10px",
+                        }}
+                      />
+                    )}
+                  </div>
                   {/* Display approval status */}
                   <div>
                     {quote.approval_status === "pending" && (
@@ -431,6 +489,64 @@ const Profile = () => {
                   <p>Price: {specificQuote.price}</p>
                   <p>Note: {specificQuote.note}</p>
                   <p>Approval Status: {specificQuote.approval_status}</p>
+                  {/* Render Images */}
+                  <div>
+                    {specificQuote.picture_one && (
+                      <img
+                        src={`http://localhost:5000/images/${specificQuote.picture_one}`}
+                        alt="One"
+                        style={{
+                          width: "100px",
+                          height: "100px",
+                          margin: "10px",
+                        }}
+                      />
+                    )}
+                    {specificQuote.picture_two && (
+                      <img
+                        src={`http://localhost:5000/images/${specificQuote.picture_two}`}
+                        alt="Two"
+                        style={{
+                          width: "100px",
+                          height: "100px",
+                          margin: "10px",
+                        }}
+                      />
+                    )}
+                    {specificQuote.picture_three && (
+                      <img
+                        src={`http://localhost:5000/images/${specificQuote.picture_three}`}
+                        alt="Three"
+                        style={{
+                          width: "100px",
+                          height: "100px",
+                          margin: "10px",
+                        }}
+                      />
+                    )}
+                    {specificQuote.picture_four && (
+                      <img
+                        src={`http://localhost:5000/images/${specificQuote.picture_four}`}
+                        alt="Four"
+                        style={{
+                          width: "100px",
+                          height: "100px",
+                          margin: "10px",
+                        }}
+                      />
+                    )}
+                    {specificQuote.picture_five && (
+                      <img
+                        src={`http://localhost:5000/images/${specificQuote.picture_five}`}
+                        alt="Five"
+                        style={{
+                          width: "100px",
+                          height: "100px",
+                          margin: "10px",
+                        }}
+                      />
+                    )}
+                  </div>
                   {specificQuote.start_date != null && (
                     <p>
                       Proposed start date:{" "}
