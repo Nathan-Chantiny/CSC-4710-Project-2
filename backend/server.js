@@ -910,7 +910,7 @@ app.get("/overdue_bills", authenticateToken, (req, res) => {
     }
 ]
   */}
-app.get("/bad_clients", authenticateToken, (req, res) => {
+  app.get("/bad_clients", authenticateToken, (req, res) => {
     const query = `
         WITH OverdueBills AS (
             SELECT 
@@ -924,11 +924,21 @@ app.get("/bad_clients", authenticateToken, (req, res) => {
             GROUP BY 
                 userId
         ),
+        GoodClients AS (
+            SELECT 
+                DISTINCT b.userId
+            FROM 
+                bill b
+            WHERE 
+                b.Status = 'Paid'
+                AND DATEDIFF(CURRENT_DATE(), b.create_date) <= 1
+        ),
         BadClients AS (
             SELECT 
                 u.id AS client_id,
                 u.first AS first_name,
                 u.last AS last_name,
+                u.address,
                 u.phone,
                 u.email,
                 COALESCE(ob.total_due, 0) AS total_due
@@ -938,17 +948,15 @@ app.get("/bad_clients", authenticateToken, (req, res) => {
                 OverdueBills ob ON u.id = ob.userId
             WHERE 
                 u.id NOT IN (
-                    SELECT DISTINCT userId 
-                    FROM bill 
-                    WHERE create_date <= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)
-                    AND Status = 'Paid'
+                    SELECT userId FROM GoodClients
                 )
             AND u.id IN (SELECT userId FROM bill)
         )
         SELECT 
             client_id, 
             first_name, 
-            last_name, 
+            last_name,
+            address, 
             phone, 
             email, 
             total_due
@@ -969,6 +977,7 @@ app.get("/bad_clients", authenticateToken, (req, res) => {
         res.json(results); // Send the query result as the response
     });
 });
+
 
 // Good Clients Endpoint
 {/*
