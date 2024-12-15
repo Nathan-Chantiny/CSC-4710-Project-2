@@ -700,13 +700,11 @@ app.get("/difficult_clients", authenticateToken, (req, res) => {
 app.get("/this_month_quotes", authenticateToken, (req, res) => {
     const query = `
         SELECT 
-            OrderID, 
+            cust_id,
             QuoteRequestID, 
-            WorkPeriod, 
             AgreedPrice, 
             Status, 
-            cust_id, 
-            accept_date
+            WorkPeriod
         FROM 
             orderofwork
         WHERE 
@@ -920,7 +918,7 @@ app.get("/overdue_bills", authenticateToken, (req, res) => {
     }
 ]
   */}
-app.get("/bad_clients", authenticateToken, (req, res) => {
+  app.get("/bad_clients", authenticateToken, (req, res) => {
     const query = `
         WITH OverdueBills AS (
             SELECT 
@@ -933,6 +931,15 @@ app.get("/bad_clients", authenticateToken, (req, res) => {
                 AND Status != 'Paid'
             GROUP BY 
                 userId
+        ),
+        GoodClients AS (
+            SELECT 
+                DISTINCT b.userId
+            FROM 
+                bill b
+            WHERE 
+                b.Status = 'Paid'
+                AND DATEDIFF(CURRENT_DATE(), b.create_date) <= 1
         ),
         BadClients AS (
             SELECT 
@@ -949,17 +956,15 @@ app.get("/bad_clients", authenticateToken, (req, res) => {
                 OverdueBills ob ON u.id = ob.userId
             WHERE 
                 u.id NOT IN (
-                    SELECT DISTINCT userId 
-                    FROM bill 
-                    WHERE create_date <= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)
-                    AND Status = 'Paid'
+                    SELECT userId FROM GoodClients
                 )
             AND u.id IN (SELECT userId FROM bill)
         )
         SELECT 
             client_id, 
             first_name, 
-            last_name, 
+            last_name,
+            address, 
             phone, 
             email, 
             total_due
@@ -980,6 +985,7 @@ app.get("/bad_clients", authenticateToken, (req, res) => {
         res.json(results); // Send the query result as the response
     });
 });
+
 
 // Good Clients Endpoint
 {/*

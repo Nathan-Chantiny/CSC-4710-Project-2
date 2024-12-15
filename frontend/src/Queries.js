@@ -9,6 +9,10 @@ const Queries = () => {
   const [bigClients, setBigClients] = useState([]); // State for Big Clients data
   const [difficultClients, setDifficultClients] = useState([]); 
   const [prospectiveClients, setProspectiveClients] = useState([]); 
+  const [badClients, setBadClients] = useState([]); 
+  const [goodClients, setGoodClients] = useState([]); 
+  const [monthlyQuotes, setMonthlyQuotes] = useState([]); 
+
 
   const userId = localStorage.getItem("userId") || 0;
 
@@ -51,6 +55,22 @@ const Queries = () => {
   }, [token]);
 
   useEffect(() => {
+    // Fetch This Month's Quote Data
+    fetch("http://localhost:5000/this_month_quotes", {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log("Monthly Quote Data:", data); // Debugging
+        setMonthlyQuotes(data); // Save data to state
+      })
+      .catch((err) => console.error("Error fetching monthly quotes:", err));
+  }, [token]);
+
+  useEffect(() => {
     // Fetch Prospective Clients Data
     fetch("http://localhost:5000/prospective_clients", {
       method: "GET",
@@ -67,6 +87,36 @@ const Queries = () => {
   }, [token]);
 
 
+  useEffect(() => {
+    fetch("http://localhost:5000/bad_clients", {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log("Bad Clients Data:", data); // Debugging
+        setBadClients(data); // Save data to state
+      })
+      .catch((err) => console.error("Error fetching bad clients:", err));
+  }, [token]);
+
+  useEffect(() => {
+    fetch("http://localhost:5000/good_clients", {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log("Good Clients Data:", data); // Debugging
+        setGoodClients(data); // Save data to state
+      })
+      .catch((err) => console.error("Error fetching good clients:", err));
+  }, [token]);
+
   const querySections = [
     {
       title: "BIG CLIENTS",
@@ -80,7 +130,8 @@ const Queries = () => {
     },
     {
       title: "THIS MONTH QUOTES",
-      columns: ["Column 1", "Column 2", "Column 3"],
+      columns: ["Customer ID","Quote ID", "Price", "Status", "Work Period"],
+      data: monthlyQuotes,
     },
     {
       title: "PROSPECTIVE CLIENTS",
@@ -98,10 +149,12 @@ const Queries = () => {
     {
       title: "BAD CLIENTS",
       columns: ["ID", "First Name", "Last Name", "Address", "Phone", "Email"],
+      data: badClients,
     },
     {
       title: "GOOD CLIENTS",
       columns: ["ID", "First Name", "Last Name", "Address", "Phone", "Email"],
+      data: goodClients,
     },
   ];
 
