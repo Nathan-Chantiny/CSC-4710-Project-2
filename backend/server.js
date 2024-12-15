@@ -545,18 +545,20 @@ app.get("/specific_orders", authenticateToken, (req, res) => {
     }
 ]
   */}
-app.get("/big_clients", authenticateToken, (req, res) => {
+  app.get("/big_clients", authenticateToken, (req, res) => {
     const query = `
         WITH CompletedOrders AS (
             SELECT 
-                cust_id, 
-                COUNT(OrderID) AS order_count
+                o.cust_id, 
+                COUNT(o.OrderID) AS order_count
             FROM 
-                orderofwork
+                orderofwork o
+            JOIN 
+                quotes q ON o.QuoteRequestID = q.quote_id
             WHERE 
-                Status = 'Billed'
+                o.Status = 'Billed' 
             GROUP BY 
-                cust_id
+                o.cust_id
         ),
         MaxOrders AS (
             SELECT 
@@ -565,9 +567,12 @@ app.get("/big_clients", authenticateToken, (req, res) => {
                 CompletedOrders
         )
         SELECT 
+            u.id AS client_id,
             u.first AS first_name,
             u.last AS last_name,
-            c.cust_id,
+            u.address,
+            u.phone,
+            u.email,
             c.order_count
         FROM 
             CompletedOrders c
@@ -589,9 +594,11 @@ app.get("/big_clients", authenticateToken, (req, res) => {
             return res.status(404).json({ message: "No big clients found" });
         }
 
-        res.json(results); // Send the query result as the response
+        res.json(results);
     });
 });
+
+
 
 // Difficult Clients Endpoint
 {/*

@@ -1,10 +1,12 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Strings from "./Strings";
 
 const Queries = () => {
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
+
+  const [bigClients, setBigClients] = useState([]); // State for Big Clients data
 
   const userId = localStorage.getItem("userId") || 0;
 
@@ -13,6 +15,58 @@ const Queries = () => {
     localStorage.removeItem("userId");
     navigate("/login");
   };
+
+  useEffect(() => {
+    // Fetch Big Clients Data
+    fetch("http://localhost:5000/big_clients", {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log("Big Clients Data:", data); // Debugging the response
+        setBigClients(data); // Save data to state
+      })
+      .catch((err) => console.error("Error fetching big clients:", err));
+  }, [token]);
+
+  const querySections = [
+    {
+      title: "BIG CLIENTS",
+      columns: ["ID", "First Name", "Last Name", "Address", "Phone", "Email"],
+      data: bigClients, // Attach fetched data here
+    },
+    {
+      title: "DIFFICULT CLIENTS",
+      columns: ["Column 1", "Column 2", "Column 3"],
+    },
+    {
+      title: "THIS MONTH QUOTES",
+      columns: ["Column 1", "Column 2", "Column 3"],
+    },
+    {
+      title: "PROSPECTIVE CLIENTS",
+      columns: ["Column 1", "Column 2", "Column 3"],
+    },
+    {
+      title: "LARGEST DRIVEWAY",
+      columns: ["Column 1", "Column 2", "Column 3"],
+    },
+    {
+      title: "OVERDUE BILLS",
+      columns: ["Column 1", "Column 2", "Column 3"],
+    },
+    {
+      title: "BAD CLIENTS",
+      columns: ["Column 1", "Column 2", "Column 3"],
+    },
+    {
+      title: "GOOD CLIENTS",
+      columns: ["Column 1", "Column 2", "Column 3"],
+    },
+  ];
 
   return (
     <div
@@ -147,60 +201,73 @@ const Queries = () => {
       </header>
 
       <main style={{ width: "100%", maxWidth: "1200px" }}>
-        <QuerySection title="BIG CLIENTS" />
-        <QuerySection title="DIFFICULT CLIENTS" />
-        <QuerySection title="THIS MONTH QUOTES" />
-        <QuerySection title="PROSPECTIVE CLIENTS" />
-        <QuerySection title="LARGEST DRIVEWAY" />
-        <QuerySection title="OVERDUE BILLS" />
-        <QuerySection title="BAD CLIENTS" />
-        <QuerySection title="GOOD CLIENTS" />
+        {querySections.map((section, index) => (
+          <QuerySection
+            key={index}
+            title={section.title}
+            columns={section.columns}
+            data={section.data || []} // Pass the data for each section
+          />
+        ))}
       </main>
     </div>
   );
 };
 
-const QuerySection = ({ title }) => {
-    return (
-      <section style={{ marginBottom: "40px", textAlign: "center" }}>
-        <h2
-          style={{
-            textAlign: "center",
-            marginBottom: "20px",
-            fontSize: "1.8rem",
-            color: "#333",
-          }}
-        >
-          {title}
-        </h2>
-        <table
-          style={{
-            width: "95%", // Stretch across most of the page width
-            maxWidth: "1200px", // Restrict maximum width
-            margin: "0 auto", // Center the table horizontally
-            borderCollapse: "collapse",
-            backgroundColor: "#f9f9f9",
-            boxShadow: "0 0 10px rgba(0,0,0,0.1)",
-          }}
-        >
-          <thead>
-            <tr
-              style={{
-                backgroundColor: "#007bff",
-                color: "#fff",
-                textAlign: "center",
-              }}
-            >
-              <th style={{ padding: "12px", textAlign: "center" }}>Column 1</th>
-              <th style={{ padding: "12px", textAlign: "center" }}>Column 2</th>
-              <th style={{ padding: "12px", textAlign: "center" }}>Column 3</th>
-              <th style={{ padding: "12px", textAlign: "center" }}>Column 4</th>
-            </tr>
-          </thead>
-          <tbody>
+const QuerySection = ({ title, columns, data }) => {
+  return (
+    <section style={{ marginBottom: "40px", textAlign: "center" }}>
+      <h2
+        style={{
+          textAlign: "center",
+          marginBottom: "20px",
+          fontSize: "1.8rem",
+          color: "#333",
+        }}
+      >
+        {title}
+      </h2>
+      <table
+        style={{
+          width: "95%",
+          maxWidth: "1200px",
+          margin: "0 auto",
+          borderCollapse: "collapse",
+          backgroundColor: "#f9f9f9",
+          boxShadow: "0 0 10px rgba(0,0,0,0.1)",
+        }}
+      >
+        <thead>
+          <tr
+            style={{
+              backgroundColor: "#007bff",
+              color: "#fff",
+              textAlign: "center",
+            }}
+          >
+            {columns.map((column, index) => (
+              <th key={index} style={{ padding: "12px", textAlign: "center" }}>
+                {column}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {data.length > 0 ? (
+            data.map((row, idx) => (
+              <tr key={idx}>
+                <td>{row.client_id}</td>
+                <td>{row.first_name}</td>
+                <td>{row.last_name}</td>
+                <td>{row.address}</td>
+                <td>{row.phone}</td>
+                <td>{row.email}</td>
+              </tr>
+            ))
+          ) : (
             <tr>
               <td
-                colSpan="4"
+                colSpan={columns.length}
                 style={{
                   padding: "12px",
                   textAlign: "center",
@@ -210,12 +277,11 @@ const QuerySection = ({ title }) => {
                 No data available
               </td>
             </tr>
-          </tbody>
-        </table>
-      </section>
-    );
-  };
-  
-  
+          )}
+        </tbody>
+      </table>
+    </section>
+  );
+};
 
 export default Queries;
