@@ -5,11 +5,38 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const bodyParser = require("body-parser");
 const cors = require("cors");
+const multer = require("multer");
+const path = require("path");
+const fs = require("fs");
 
 const app = express();
+app.use(cors());
+
+// Configure multer to save files to the "images" directory
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, path.join(__dirname, "images"));
+  },
+  filename: (req, file, cb) => {
+    cb(null, `${Date.now()}-${file.originalname}`);
+  },
+});
+
+const upload = multer({
+  storage,
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = ["image/jpeg", "image/png", "image/jpg"];
+    if (!allowedTypes.includes(file.mimetype)) {
+      return cb(new Error("Only JPEG, PNG, and JPG formats are allowed."));
+    }
+    cb(null, true);
+  },
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+});
+
+app.use("/images", express.static(path.join(__dirname, "images")));
 
 app.use(bodyParser.json());
-app.use(cors());
 
 const db = mysql.createConnection({
   host: "localhost",
@@ -135,45 +162,86 @@ app.get("/profile", authenticateToken, (req, res) => {
   });
 });
 
-app.post("/add_quote", authenticateToken, (req, res) => {
-  const cust_id = req.user.userId;
-  const {
-    address,
-    square_feet,
-    price,
-    picture_one,
-    picture_two,
-    picture_three,
-    picture_four,
-    picture_five,
-    note,
-  } = req.body;
+app.post(
+  "/add_quote",
+  authenticateToken,
+  upload.fields([
+    { name: "picture_one", maxCount: 1 },
+    { name: "picture_two", maxCount: 1 },
+    { name: "picture_three", maxCount: 1 },
+    { name: "picture_four", maxCount: 1 },
+    { name: "picture_five", maxCount: 1 },
+  ]),
+  (req, res) => {
+    const cust_id = req.user.userId;
+    const { address, square_feet, price, note } = req.body;
 
-  db.query(
-    "INSERT INTO quotes (cust_id, address, square_feet, price, picture_one, picture_two, picture_three, picture_four, picture_five, note, approval_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')",
-    [
-      cust_id,
-      address,
-      square_feet,
-      price,
-      picture_one,
-      picture_two,
-      picture_three,
-      picture_four,
-      picture_five,
-      note,
-    ],
-    (err, result) => {
+    // Insert the quote without image paths to get the quote ID
+    const query =
+      "INSERT INTO quotes (cust_id, address, square_feet, price, note, approval_status) VALUES (?, ?, ?, ?, ?, 'pending')";
+
+    db.query(query, [cust_id, address, square_feet, price, note], (err, result) => {
       if (err) {
         console.error("Database error:", err.message);
         return res
           .status(500)
           .json({ message: "Quote request failed", error: err.message });
       }
-      res.status(201).json({ message: "Quote submitted successfully" });
-    }
-  );
-});
+
+      const quoteId = result.insertId; // Get the newly created quote ID
+      const pictures = req.files;
+
+      // Define final file paths and rename uploaded files
+      const filePaths = {};
+
+      try {
+        ["picture_one", "picture_two", "picture_three", "picture_four", "picture_five"].forEach(
+          (field, index) => {
+            if (pictures[field] && pictures[field][0]) {
+              const tempFilePath = pictures[field][0].path;
+              const newFileName = `${cust_id}-${quoteId}-image_${index + 1}${path.extname(
+                tempFilePath
+              )}`;
+              const newFilePath = path.join(__dirname, "images", newFileName);
+
+              // Rename the file
+              fs.renameSync(tempFilePath, newFilePath);
+              filePaths[field] = newFileName; // Save new file name
+            }
+          }
+        );
+      } catch (err) {
+        console.error("File renaming error:", err.message);
+        return res.status(500).json({ message: "File processing failed", error: err.message });
+      }
+
+      // Update the quote with the image file paths
+      const updateQuery =
+        "UPDATE quotes SET picture_one = ?, picture_two = ?, picture_three = ?, picture_four = ?, picture_five = ? WHERE quote_id = ?";
+      db.query(
+        updateQuery,
+        [
+          filePaths.picture_one || null,
+          filePaths.picture_two || null,
+          filePaths.picture_three || null,
+          filePaths.picture_four || null,
+          filePaths.picture_five || null,
+          quoteId,
+        ],
+        (updateErr) => {
+          if (updateErr) {
+            console.error("Database update error:", updateErr.message);
+            return res
+              .status(500)
+              .json({ message: "Quote update failed", error: updateErr.message });
+          }
+
+          res.status(201).json({ message: "Quote submitted successfully", quoteId });
+        }
+      );
+    });
+  }
+);
 
 app.get("/quotes", authenticateToken, (req, res) => {
   const query = `
