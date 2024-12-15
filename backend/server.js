@@ -1168,63 +1168,46 @@ app.get("/overdue_bills", authenticateToken, (req, res) => {
 ]
   */}
 app.get("/bad_clients", authenticateToken, (req, res) => {
-    const query = `
+  const query = `
         WITH OverdueBills AS (
             SELECT 
-                userId,
-                SUM(Amount) AS total_due
+                b.userId,
+                SUM(b.Amount) AS total_due
             FROM 
-                bill
+                bill b
             WHERE 
-                create_date <= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)
-                AND Status != 'Paid'
+                b.create_date <= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)
+                AND b.Status != 'Paid'
             GROUP BY 
-                userId
-        ),
-        BadClients AS (
-            SELECT 
-                u.id AS client_id,
-                u.first AS first_name,
-                u.last AS last_name,
-                u.phone,
-                u.email,
-                COALESCE(ob.total_due, 0) AS total_due
-            FROM 
-                users u
-            LEFT JOIN 
-                OverdueBills ob ON u.id = ob.userId
-            WHERE 
-                u.id NOT IN (
-                    SELECT DISTINCT userId 
-                    FROM bill 
-                    WHERE create_date <= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)
-                    AND Status = 'Paid'
-                )
-            AND u.id IN (SELECT userId FROM bill)
+                b.userId
         )
         SELECT 
-            client_id, 
-            first_name, 
-            last_name, 
-            phone, 
-            email, 
-            total_due
+            u.id AS client_id,
+            u.first AS first_name,
+            u.last AS last_name,
+            u.phone,
+            u.email,
+            ob.total_due
         FROM 
-            BadClients;
+            users u
+        INNER JOIN 
+            OverdueBills ob ON u.id = ob.userId
+        WHERE 
+            ob.total_due > 0;
     `;
 
-    db.query(query, (err, results) => {
-        if (err) {
-            console.error("Database error:", err);
-            return res.status(500).json({ error: "Database query failed" });
-        }
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error("Database error:", err);
+      return res.status(500).json({ error: "Database query failed" });
+    }
 
-        if (results.length === 0) {
-            return res.status(404).json({ message: "No bad clients found" });
-        }
+    if (results.length === 0) {
+      return res.status(404).json({ message: "No bad clients found" });
+    }
 
-        res.json(results); // Send the query result as the response
-    });
+    res.json(results);
+  });
 });
 
 // Good Clients Endpoint
