@@ -647,6 +647,7 @@ app.get("/difficult_clients", authenticateToken, (req, res) => {
             u.id AS client_id,
             u.first AS first_name,
             u.last AS last_name,
+            u.address,
             u.phone,
             u.email,
             aq.request_count
@@ -753,6 +754,7 @@ app.get("/prospective_clients", authenticateToken, (req, res) => {
             u.id AS client_id, 
             u.first AS first_name, 
             u.last AS last_name,
+            u.address,
             u.phone, 
             u.email
         FROM 
@@ -762,7 +764,7 @@ app.get("/prospective_clients", authenticateToken, (req, res) => {
         ON 
             u.id = q.cust_id
         WHERE 
-            q.cust_id IS NULL;
+            q.cust_id IS NULL
             AND u.id != 0;
     `;
 
@@ -779,6 +781,7 @@ app.get("/prospective_clients", authenticateToken, (req, res) => {
         res.json(results); // Send the query result as the response
     });
 });
+
 
 // Largest Driveway Endpoint
 {/*
@@ -936,6 +939,7 @@ app.get("/bad_clients", authenticateToken, (req, res) => {
                 u.id AS client_id,
                 u.first AS first_name,
                 u.last AS last_name,
+                u.address,
                 u.phone,
                 u.email,
                 COALESCE(ob.total_due, 0) AS total_due
@@ -1003,6 +1007,7 @@ app.get("/good_clients", authenticateToken, (req, res) => {
             DISTINCT u.id AS client_id,
             u.first AS first_name,
             u.last AS last_name,
+            u.address,
             u.phone,
             u.email
         FROM 

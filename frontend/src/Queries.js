@@ -7,6 +7,8 @@ const Queries = () => {
   const token = localStorage.getItem("token");
 
   const [bigClients, setBigClients] = useState([]); // State for Big Clients data
+  const [difficultClients, setDifficultClients] = useState([]); 
+  const [prospectiveClients, setProspectiveClients] = useState([]); 
 
   const userId = localStorage.getItem("userId") || 0;
 
@@ -26,21 +28,55 @@ const Queries = () => {
     })
       .then((response) => response.json())
       .then((data) => {
-        console.log("Big Clients Data:", data); // Debugging the response
+        console.log("Big Clients Data:", data); // Debugging
         setBigClients(data); // Save data to state
       })
       .catch((err) => console.error("Error fetching big clients:", err));
   }, [token]);
 
+  useEffect(() => {
+    // Fetch Big Clients Data
+    fetch("http://localhost:5000/difficult_clients", {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log("Difficult Clients Data:", data); // Debugging
+        setDifficultClients(data); // Save data to state
+      })
+      .catch((err) => console.error("Error fetching difficult clients:", err));
+  }, [token]);
+
+  useEffect(() => {
+    // Fetch Prospective Clients Data
+    fetch("http://localhost:5000/prospective_clients", {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log("Prospective Clients Data:", data); // Debugging
+        setProspectiveClients(data); // Save data to state
+      })
+      .catch((err) => console.error("Error fetching prospective clients:", err));
+  }, [token]);
+
+
   const querySections = [
     {
       title: "BIG CLIENTS",
       columns: ["ID", "First Name", "Last Name", "Address", "Phone", "Email"],
-      data: bigClients, // Attach fetched data here
+      data: bigClients,
     },
     {
       title: "DIFFICULT CLIENTS",
-      columns: ["Column 1", "Column 2", "Column 3"],
+      columns: ["ID", "First Name", "Last Name", "Address", "Phone", "Email"],
+      data: difficultClients,
     },
     {
       title: "THIS MONTH QUOTES",
@@ -48,7 +84,8 @@ const Queries = () => {
     },
     {
       title: "PROSPECTIVE CLIENTS",
-      columns: ["Column 1", "Column 2", "Column 3"],
+      columns: ["ID", "First Name", "Last Name", "Address", "Phone", "Email"],
+      data: prospectiveClients,
     },
     {
       title: "LARGEST DRIVEWAY",
@@ -60,11 +97,11 @@ const Queries = () => {
     },
     {
       title: "BAD CLIENTS",
-      columns: ["Column 1", "Column 2", "Column 3"],
+      columns: ["ID", "First Name", "Last Name", "Address", "Phone", "Email"],
     },
     {
       title: "GOOD CLIENTS",
-      columns: ["Column 1", "Column 2", "Column 3"],
+      columns: ["ID", "First Name", "Last Name", "Address", "Phone", "Email"],
     },
   ];
 
