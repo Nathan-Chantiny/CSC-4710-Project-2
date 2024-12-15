@@ -662,7 +662,7 @@ app.get("/big_clients", authenticateToken, (req, res) => {
         }
 
         if (results.length === 0) {
-            return res.status(404).json({ message: "No big clients found" });
+            return res.status(204).json({ message: "No big clients found" });
         }
 
         res.json(results); // Send the query result as the response
@@ -692,8 +692,6 @@ app.get("/big_clients", authenticateToken, (req, res) => {
 ]
   */}
   app.get("/difficult_clients", authenticateToken, (req, res) => {
-    // console.log("Request received at /difficult_clients");
-  
     const query = `
       WITH ApprovedQuotes AS (
         SELECT 
@@ -736,14 +734,13 @@ app.get("/big_clients", authenticateToken, (req, res) => {
       }
   
       if (results.length === 0) {
-        return res.status(404).json({ message: "No difficult clients found" });
+        return res.status(204).json({ message: "No difficult clients found" });
       }
   
       res.json(results); // Send the query result as the response
     });
   });
   
-
 // This Month Quotes Endpoint
 {/*
   EXAMPLE OUTPUT:
@@ -792,7 +789,7 @@ app.get("/this_month_quotes", authenticateToken, (req, res) => {
         }
 
         if (results.length === 0) {
-            return res.status(404).json({ message: "No quotes found for this month" });
+            return res.status(204).json({ message: "No quotes found for this month" });
         }
 
         res.json(results); // Send the query result as the response
@@ -845,7 +842,7 @@ app.get("/prospective_clients", authenticateToken, (req, res) => {
         }
 
         if (results.length === 0) {
-            return res.status(404).json({ message: "No clients without quotes found" });
+            return res.status(204).json({ message: "No clients without quotes found" });
         }
 
         res.json(results); // Send the query result as the response
@@ -897,10 +894,74 @@ app.get("/largest_driveway", authenticateToken, (req, res) => {
         }
 
         if (results.length === 0) {
-            return res.status(404).json({ message: "No driveways found" });
+            return res.status(204).json({ message: "No driveways found" });
         }
 
         res.json(results); // Send the query result as the response
+    });
+});
+
+// Overdue Bills Endpoint
+{/*
+  EXAMPLE OUTPUT:
+  [
+    {
+        "BillID": 101,
+        "OrderID": 202,
+        "Amount": 500.00,
+        "Status": "Pending",
+        "create_date": "2024-12-01",
+        "first_name": "John",
+        "last_name": "Doe",
+        "phone": "1234567890",
+        "email": "johndoe@example.com"
+    },
+    {
+        "BillID": 102,
+        "OrderID": 203,
+        "Amount": 300.00,
+        "Status": "Dispute",
+        "create_date": "2024-12-02",
+        "first_name": "Jane",
+        "last_name": "Smith",
+        "phone": "9876543210",
+        "email": "janesmith@example.com"
+    }
+]
+  */}
+  app.get("/overdue_bills", authenticateToken, (req, res) => {
+    // Query to fetch overdue bills that are unpaid and older than 7 days
+    const query = `
+        SELECT 
+            b.BillID,
+            b.OrderID,
+            b.Amount,
+            b.Status,
+            b.create_date,
+            u.first AS first_name,
+            u.last AS last_name,
+            u.phone,
+            u.email
+        FROM 
+            bill b
+        INNER JOIN 
+            users u ON b.userId = u.id
+        WHERE 
+            b.Status NOT IN ('Paid') -- Exclude paid bills
+            AND DATEDIFF(CURRENT_DATE(), b.create_date) >= 7; -- Older than 7 days
+    `;
+    
+    db.query(query, (err, results) => {
+        if (err) {
+            console.error("Error fetching overdue bills:", err.message);
+            return res.status(500).json({ error: "Database query failed" });
+        }
+
+        if (results.length === 0) {
+            return res.status(204).json({ message: "No overdue bills found" });
+        }
+
+        res.json(results);
     });
 });
 
@@ -987,13 +1048,12 @@ app.get("/largest_driveway", authenticateToken, (req, res) => {
         }
 
         if (results.length === 0) {
-            return res.status(404).json({ message: "No bad clients found" });
+            return res.status(204).json({ message: "No bad clients found" });
         }
 
         res.json(results); // Send the query result as the response
     });
 });
-
 
 // Good Clients Endpoint
 {/*
@@ -1039,76 +1099,9 @@ app.get("/good_clients", authenticateToken, (req, res) => {
         }
 
         if (results.length === 0) {
-            return res.status(404).json({ message: "No clients without quotes found" });
+            return res.status(204).json({ message: "No clients without quotes found" });
         }
 
         res.json(results); // Send the query result as the response
-    });
-});
-
-// Overdue Bills Endpoint
-{/*
-  EXAMPLE OUTPUT:
-  [
-    {
-        "BillID": 101,
-        "OrderID": 202,
-        "Amount": 500.00,
-        "Status": "Pending",
-        "create_date": "2024-12-01",
-        "first_name": "John",
-        "last_name": "Doe",
-        "phone": "1234567890",
-        "email": "johndoe@example.com"
-    },
-    {
-        "BillID": 102,
-        "OrderID": 203,
-        "Amount": 300.00,
-        "Status": "Dispute",
-        "create_date": "2024-12-02",
-        "first_name": "Jane",
-        "last_name": "Smith",
-        "phone": "9876543210",
-        "email": "janesmith@example.com"
-    }
-]
-  */}
-  app.get("/overdue_bills", authenticateToken, (req, res) => {
-    
-    
-    // Query to fetch overdue bills that are unpaid and older than 7 days
-    const query = `
-        SELECT 
-            b.BillID,
-            b.OrderID,
-            b.Amount,
-            b.Status,
-            b.create_date,
-            u.first AS first_name,
-            u.last AS last_name,
-            u.phone,
-            u.email
-        FROM 
-            bill b
-        INNER JOIN 
-            users u ON b.userId = u.id
-        WHERE 
-            b.Status NOT IN ('Paid') -- Exclude paid bills
-            AND DATEDIFF(CURRENT_DATE(), b.create_date) >= 7; -- Older than 7 days
-    `;
-    
-    db.query(query, (err, results) => {
-        if (err) {
-            console.error("Error fetching overdue bills:", err.message);
-            return res.status(500).json({ error: "Database query failed" });
-        }
-
-        if (results.length === 0) {
-            console.warn("No overdue bills found");
-            return res.status(404).json({ message: "No overdue bills found" });
-        }
-
-        res.json(results);
     });
 });
