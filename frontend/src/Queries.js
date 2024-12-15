@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
 import Strings from "./Strings";
 
 const Queries = () => {
@@ -13,6 +14,41 @@ const Queries = () => {
     localStorage.removeItem("userId");
     navigate("/login");
   };
+
+  const endpoints = [
+    { title: "BIG CLIENTS", url: "/big_clients" },
+    { title: "DIFFICULT CLIENTS", url: "/difficult_clients" },
+    { title: "THIS MONTH QUOTES", url: "/this_month_quotes" },
+    { title: "PROSPECTIVE CLIENTS", url: "/prospective_clients" },
+    { title: "LARGEST DRIVEWAY", url: "/largest_driveway" },
+    { title: "OVERDUE BILLS", url: "/overdue_bills" },
+    { title: "BAD CLIENTS", url: "/bad_clients" },
+    { title: "GOOD CLIENTS", url: "/good_clients" },
+  ];
+
+  const [data, setData] = useState({});
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const fetchedData = {};
+      for (const endpoint of endpoints) {
+        try {
+          const response = await axios.get(endpoint.url, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          fetchedData[endpoint.title] = response.data;
+        } catch (error) {
+          console.error(`Error fetching data for ${endpoint.title}:`, error);
+          fetchedData[endpoint.title] = [];
+        }
+      }
+      setData(fetchedData);
+    };
+
+    if (token) {
+      fetchData();
+    }
+  }, [token]);
 
   return (
     <div
@@ -147,57 +183,55 @@ const Queries = () => {
       </header>
 
       <main style={{ width: "100%", maxWidth: "1200px" }}>
-        <QuerySection title="BIG CLIENTS" />
-        <QuerySection title="DIFFICULT CLIENTS" />
-        <QuerySection title="THIS MONTH QUOTES" />
-        <QuerySection title="PROSPECTIVE CLIENTS" />
-        <QuerySection title="LARGEST DRIVEWAY" />
-        <QuerySection title="OVERDUE BILLS" />
-        <QuerySection title="BAD CLIENTS" />
-        <QuerySection title="GOOD CLIENTS" />
+        {endpoints.map(({ title }) => (
+          <QuerySection key={title} title={title} data={data[title] || []} />
+        ))}
       </main>
     </div>
   );
 };
 
-const QuerySection = ({ title }) => {
-    return (
-      <section style={{ marginBottom: "40px", textAlign: "center" }}>
-        <h2
-          style={{
-            textAlign: "center",
-            marginBottom: "20px",
-            fontSize: "1.8rem",
-            color: "#333",
-          }}
-        >
-          {title}
-        </h2>
-        <table
-          style={{
-            width: "95%", // Stretch across most of the page width
-            maxWidth: "1200px", // Restrict maximum width
-            margin: "0 auto", // Center the table horizontally
-            borderCollapse: "collapse",
-            backgroundColor: "#f9f9f9",
-            boxShadow: "0 0 10px rgba(0,0,0,0.1)",
-          }}
-        >
-          <thead>
-            <tr
-              style={{
-                backgroundColor: "#007bff",
-                color: "#fff",
-                textAlign: "center",
-              }}
-            >
-              <th style={{ padding: "12px", textAlign: "center" }}>Column 1</th>
-              <th style={{ padding: "12px", textAlign: "center" }}>Column 2</th>
-              <th style={{ padding: "12px", textAlign: "center" }}>Column 3</th>
-              <th style={{ padding: "12px", textAlign: "center" }}>Column 4</th>
-            </tr>
-          </thead>
-          <tbody>
+const QuerySection = ({ title, data }) => {
+  return (
+    <section style={{ marginBottom: "40px", textAlign: "center" }}>
+      <h2
+        style={{
+          textAlign: "center",
+          marginBottom: "20px",
+          fontSize: "1.8rem",
+          color: "#333",
+        }}
+      >
+        {title}
+      </h2>
+      <table
+        style={{
+          width: "95%",
+          maxWidth: "1200px",
+          margin: "0 auto",
+          borderCollapse: "collapse",
+          backgroundColor: "#f9f9f9",
+          boxShadow: "0 0 10px rgba(0,0,0,0.1)",
+        }}
+      >
+        <thead>
+          <tr
+            style={{
+              backgroundColor: "#007bff",
+              color: "#fff",
+              textAlign: "center",
+            }}
+          >
+            {data.length > 0 &&
+              Object.keys(data[0]).map((key) => (
+                <th key={key} style={{ padding: "12px", textAlign: "center" }}>
+                  {key.toUpperCase()}
+                </th>
+              ))}
+          </tr>
+        </thead>
+        <tbody>
+          {data.length === 0 ? (
             <tr>
               <td
                 colSpan="4"
@@ -210,12 +244,24 @@ const QuerySection = ({ title }) => {
                 No data available
               </td>
             </tr>
-          </tbody>
-        </table>
-      </section>
-    );
-  };
-  
-  
+          ) : (
+            data.map((row, idx) => (
+              <tr key={idx}>
+                {Object.values(row).map((value, cellIdx) => (
+                  <td
+                    key={cellIdx}
+                    style={{ padding: "12px", textAlign: "center" }}
+                  >
+                    {value}
+                  </td>
+                ))}
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
+    </section>
+  );
+};
 
 export default Queries;

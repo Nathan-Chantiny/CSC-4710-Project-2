@@ -755,7 +755,7 @@ app.get("/prospective_clients", authenticateToken, (req, res) => {
         ON 
             u.id = q.cust_id
         WHERE 
-            q.cust_id IS NULL;
+            q.cust_id IS NULL
             AND u.id != 0;
     `;
 
