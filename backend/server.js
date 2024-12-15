@@ -615,55 +615,58 @@ app.get("/big_clients", authenticateToken, (req, res) => {
     }
 ]
   */}
-app.get("/difficult_clients", authenticateToken, (req, res) => {
-  const query = `
-        WITH ApprovedQuotes AS (
-            SELECT 
-                cust_id, 
-                COUNT(DISTINCT quote_id) AS request_count
-            FROM 
-                quotes
-            WHERE 
-                approval_status = 'approved'
-            GROUP BY 
-                cust_id
-        ),
-        DifficultClients AS (
-            SELECT 
-                cust_id
-            FROM 
-                ApprovedQuotes
-            WHERE 
-                request_count = 3
-        )
+  app.get("/difficult_clients", authenticateToken, (req, res) => {
+    // console.log("Request received at /difficult_clients");
+  
+    const query = `
+      WITH ApprovedQuotes AS (
         SELECT 
-            u.id AS client_id,
-            u.first AS first_name,
-            u.last AS last_name,
-            u.phone,
-            u.email,
-            aq.request_count
+          cust_id, 
+          COUNT(DISTINCT quote_id) AS request_count
         FROM 
-            users u
-        INNER JOIN 
-            ApprovedQuotes aq ON u.id = aq.cust_id
+          quotes
         WHERE 
-            aq.request_count = 3;
+          approval_status = 'approved'
+        GROUP BY 
+          cust_id
+      ),
+      DifficultClients AS (
+        SELECT 
+          cust_id
+        FROM 
+          ApprovedQuotes
+        WHERE 
+          request_count = 3
+      )
+      SELECT 
+        u.id AS client_id,
+        u.first AS first_name,
+        u.last AS last_name,
+        u.phone,
+        u.email,
+        aq.request_count
+      FROM 
+        users u
+      INNER JOIN 
+        ApprovedQuotes aq ON u.id = aq.cust_id
+      WHERE 
+        aq.request_count = 3;
     `;
-
-  db.query(query, (err, results) => {
-    if (err) {
-      console.error("Database error:", err);
-      return res.status(500).json({ error: "Database query failed" });
-    }
-
-    if (results.length === 0) {
-      return res.status(404).json({ message: "No difficult clients found" });
-    }
-
-    res.json(results); // Send the query result as the response
+  
+    db.query(query, (err, results) => {
+      if (err) {
+        console.error("Database error:", err);
+        return res.status(500).json({ error: "Database query failed" });
+      }
+  
+      if (results.length === 0) {
+        return res.status(404).json({ message: "No difficult clients found" });
+      }
+  
+      res.json(results); // Send the query result as the response
+    });
   });
-});
+  
 
 // This Month Quotes Endpoint
 {/*
@@ -1110,7 +1113,10 @@ app.get("/largest_driveway", authenticateToken, (req, res) => {
     }
 ]
   */}
-app.get("/overdue_bills", authenticateToken, (req, res) => {
+  app.get("/overdue_bills", authenticateToken, (req, res) => {
+    
+    
+    // Query to fetch overdue bills that are unpaid and older than 7 days
     const query = `
         SELECT 
             b.BillID,
@@ -1127,23 +1133,25 @@ app.get("/overdue_bills", authenticateToken, (req, res) => {
         INNER JOIN 
             users u ON b.userId = u.id
         WHERE 
-            b.Status != 'Paid'
-            AND b.create_date <= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY);
+            b.Status NOT IN ('Paid') -- Exclude paid bills
+            AND DATEDIFF(CURRENT_DATE(), b.create_date) >= 7; -- Older than 7 days
     `;
-
+    
     db.query(query, (err, results) => {
         if (err) {
-            console.error("Database error:", err);
+            console.error("Error fetching overdue bills:", err.message);
             return res.status(500).json({ error: "Database query failed" });
         }
 
         if (results.length === 0) {
+            console.warn("No overdue bills found");
             return res.status(404).json({ message: "No overdue bills found" });
         }
 
-        res.json(results); // Send the query result as the response
+        res.json(results);
     });
 });
+
 
 // Bad Clients Endpoint
 {/*
