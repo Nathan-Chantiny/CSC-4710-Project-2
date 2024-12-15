@@ -1046,58 +1046,6 @@ app.get("/good_clients", authenticateToken, (req, res) => {
     });
 });
 
-// Largest Driveway Endpoint
-{/*
-  EXAMPLE OUTPUT:
-  [
-    {
-        "address": "456 Oak Ave",
-        "square_feet": 3000
-    },
-    {
-        "address": "789 Pine Dr",
-        "square_feet": 3000
-    }
-]
-  */}
-app.get("/largest_driveway", authenticateToken, (req, res) => {
-    const query = `
-        WITH MaxSquareFeet AS (
-            SELECT 
-                MAX(square_feet) AS max_square_feet
-            FROM 
-                quotes
-        ),
-        LargestDriveways AS (
-            SELECT 
-                address, 
-                square_feet
-            FROM 
-                quotes
-            WHERE 
-                square_feet = (SELECT max_square_feet FROM MaxSquareFeet)
-        )
-        SELECT 
-            address, 
-            square_feet
-        FROM 
-            LargestDriveways;
-    `;
-
-    db.query(query, (err, results) => {
-        if (err) {
-            console.error("Database error:", err);
-            return res.status(500).json({ error: "Database query failed" });
-        }
-
-        if (results.length === 0) {
-            return res.status(404).json({ message: "No driveways found" });
-        }
-
-        res.json(results); // Send the query result as the response
-    });
-});
-
 // Overdue Bills Endpoint
 {/*
   EXAMPLE OUTPUT:
