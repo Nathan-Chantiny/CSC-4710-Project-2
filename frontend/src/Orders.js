@@ -167,7 +167,7 @@ const Orders = () => {
                 </Link>
               </li>
             )}
-            {token && (
+            {token && userId === 0 && (
               <li>
                 <Link
                   to="/queries"

@@ -267,7 +267,7 @@ const Profile = () => {
               </Link>
             </li>
           )}
-          {localStorage.getItem("token") && (
+          {localStorage.getItem("token") && userId === 0 && (
             <li>
               <Link
                 to="/queries"

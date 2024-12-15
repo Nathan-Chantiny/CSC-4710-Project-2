@@ -154,14 +154,14 @@ const Queries = () => {
                 </li>
                 <li>
                   <Link
-                    to="/queries"
+                    to="/bills"
                     style={{
                       textDecoration: "none",
                       fontSize: "1.2rem",
                       color: "#007bff",
                     }}
                   >
-                    {Strings.queriesName}
+                    {Strings.billsName}
                   </Link>
                 </li>
                 <li>
