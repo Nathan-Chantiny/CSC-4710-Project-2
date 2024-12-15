@@ -339,126 +339,132 @@ const HomePage = () => {
         lineHeight: "1.6",
       }}
     >
-      <header style={{ textAlign: "center", marginBottom: "30px" }}>
-        <h1 style={{ fontSize: "2.5rem", color: "#333" }}>Bill Management</h1>
-        <nav style={{ marginTop: "20px" }}>
-          <ul
-            style={{
-              listStyleType: "none",
-              padding: "0",
-              display: "flex",
-              justifyContent: "center",
-              gap: "20px",
-            }}
-          >
-            {!token ? (
-              <>
-                <li>
-                  <Link
-                    to="/login"
-                    style={{
-                      textDecoration: "none",
-                      fontSize: "1.2rem",
-                      color: "#007bff",
-                    }}
-                  >
-                    {Strings.loginName}
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    to="/register"
-                    style={{
-                      textDecoration: "none",
-                      fontSize: "1.2rem",
-                      color: "#007bff",
-                    }}
-                  >
-                    {Strings.registerName}
-                  </Link>
-                </li>
-              </>
-            ) : (
-              <>
-                <li>
-                  <Link
-                    to="/"
-                    style={{
-                      textDecoration: "none",
-                      fontSize: "1.2rem",
-                      color: "#007bff",
-                    }}
-                  >
-                    {Strings.homePageName}
-                  </Link>
-                </li>
-                {userId !== 0 && (
-                  <li>
-                    <Link
-                      to="/quote"
-                      style={{
-                        textDecoration: "none",
-                        fontSize: "1.2rem",
-                        color: "#007bff",
-                      }}
-                    >
-                      {Strings.submitQuoteName}
-                    </Link>
-                  </li>
-                )}
-                <li>
-                  <Link
-                    to="/profile"
-                    style={{
-                      textDecoration: "none",
-                      fontSize: "1.2rem",
-                      color: "#007bff",
-                    }}
-                  >
-                    {Strings.quoteName}
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    to="/orders"
-                    style={{
-                      textDecoration: "none",
-                      fontSize: "1.2rem",
-                      color: "#007bff",
-                    }}
-                  >
-                    {Strings.ordersName}
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    to="/queries"
-                    style={{
-                      textDecoration: "none",
-                      fontSize: "1.2rem",
-                      color: "#007bff",
-                    }}
-                  >
-                    {Strings.queriesName}
-                  </Link>
-                </li>
-                <li>
-                  <button
-                    onClick={handleLogout}
-                    style={{
-                      textDecoration: "none",
-                      fontSize: "1.2rem",
-                      color: "#007bff",
-                    }}
-                  >
-                    {Strings.logoutName}
-                  </button>
-                </li>
-              </>
-            )}
-          </ul>
-        </nav>
-      </header>
+<header style={{ textAlign: "center", marginBottom: "30px" }}>
+  <h1 style={{ fontSize: "2.5rem", color: "#333" }}>Bill Management</h1>
+  <nav style={{ marginTop: "20px" }}>
+    <ul
+      style={{
+        listStyleType: "none",
+        padding: "0",
+        display: "flex",
+        justifyContent: "center",
+        gap: "20px",
+      }}
+    >
+      {!token ? (
+        <>
+          <li>
+            <Link
+              to="/login"
+              style={{
+                textDecoration: "none",
+                fontSize: "1.2rem",
+                color: "#007bff",
+              }}
+            >
+              {Strings.loginName}
+            </Link>
+          </li>
+          <li>
+            <Link
+              to="/register"
+              style={{
+                textDecoration: "none",
+                fontSize: "1.2rem",
+                color: "#007bff",
+              }}
+            >
+              {Strings.registerName}
+            </Link>
+          </li>
+        </>
+      ) : (
+        <>
+          <li>
+            <Link
+              to="/"
+              style={{
+                textDecoration: "none",
+                fontSize: "1.2rem",
+                color: "#007bff",
+              }}
+            >
+              {Strings.homePageName}
+            </Link>
+          </li>
+          {userId !== 0 && (
+            <li>
+              <Link
+                to="/quote"
+                style={{
+                  textDecoration: "none",
+                  fontSize: "1.2rem",
+                  color: "#007bff",
+                }}
+              >
+                {Strings.submitQuoteName}
+              </Link>
+            </li>
+          )}
+          <li>
+            <Link
+              to="/profile"
+              style={{
+                textDecoration: "none",
+                fontSize: "1.2rem",
+                color: "#007bff",
+              }}
+            >
+              {Strings.quoteName}
+            </Link>
+          </li>
+          <li>
+            <Link
+              to="/orders"
+              style={{
+                textDecoration: "none",
+                fontSize: "1.2rem",
+                color: "#007bff",
+              }}
+            >
+              {Strings.ordersName}
+            </Link>
+          </li>
+
+          {/* Only show Queries link if token exists and userId === 0 */}
+          {localStorage.getItem("token") && userId === 0 && (
+            <li>
+              <Link
+                to="/queries"
+                style={{
+                  textDecoration: "none",
+                  fontSize: "1.2rem",
+                  color: "#007bff",
+                }}
+              >
+                {Strings.queriesName}
+              </Link>
+            </li>
+          )}
+
+          <li>
+            <button
+              onClick={handleLogout}
+              style={{
+                textDecoration: "none",
+                fontSize: "1.2rem",
+                color: "#007bff",
+              }}
+            >
+              {Strings.logoutName}
+            </button>
+          </li>
+        </>
+      )}
+    </ul>
+  </nav>
+</header>
+
 
       <main>{token && <Bills />}</main>
     </div>
