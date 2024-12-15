@@ -169,10 +169,10 @@ app.get("/profile", authenticateToken, (req, res) => {
   UPDATE quotes SET picture_three = '7-316-image_3.jpg';
   UPDATE quotes SET picture_four = '7-316-image_4.jpg';
   UPDATE quotes SET picture_five = '7-316-image_5.jpg';
+
+  ALSO IN THE CONSOLE RUN "npm install multer" TO INSTALL THE MULTER PACKAGE
   */}
-app.post(
-  "/add_quote",
-  authenticateToken,
+app.post("/add_quote", authenticateToken,
   upload.fields([
     { name: "picture_one", maxCount: 1 },
     { name: "picture_two", maxCount: 1 },
