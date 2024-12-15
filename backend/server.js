@@ -162,6 +162,14 @@ app.get("/profile", authenticateToken, (req, res) => {
   });
 });
 
+{/*
+  RUN THIS IN SQL TO UPDATE THE TABLE TO WORK WITH THE IMAGES IN THE 'images' DIRECTORY
+  UPDATE quotes SET picture_one = '7-316-image_1.jpg';
+  UPDATE quotes SET picture_two = '7-316-image_2.jpg';
+  UPDATE quotes SET picture_three = '7-316-image_3.jpg';
+  UPDATE quotes SET picture_four = '7-316-image_4.jpg';
+  UPDATE quotes SET picture_five = '7-316-image_5.jpg';
+  */}
 app.post(
   "/add_quote",
   authenticateToken,
