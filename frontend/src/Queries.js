@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import Strings from "./Strings";
@@ -15,16 +15,16 @@ const Queries = () => {
     navigate("/login");
   };
 
-  const endpoints = [
-    { title: "BIG CLIENTS", url: "/big_clients" },
-    { title: "DIFFICULT CLIENTS", url: "/difficult_clients" },
-    { title: "THIS MONTH QUOTES", url: "/this_month_quotes" },
-    { title: "PROSPECTIVE CLIENTS", url: "/prospective_clients" },
-    { title: "LARGEST DRIVEWAY", url: "/largest_driveway" },
-    { title: "OVERDUE BILLS", url: "/overdue_bills" },
-    { title: "BAD CLIENTS", url: "/bad_clients" },
-    { title: "GOOD CLIENTS", url: "/good_clients" },
-  ];
+  const endpoints = useMemo(() => [
+  { title: "BIG CLIENTS", url: "/big_clients" },
+  { title: "DIFFICULT CLIENTS", url: "/difficult_clients" },
+  { title: "THIS MONTH QUOTES", url: "/this_month_quotes" },
+  { title: "PROSPECTIVE CLIENTS", url: "/prospective_clients" },
+  { title: "LARGEST DRIVEWAY", url: "/largest_driveway" },
+  { title: "OVERDUE BILLS", url: "/overdue_bills" },
+  { title: "BAD CLIENTS", url: "/bad_clients" },
+  { title: "GOOD CLIENTS", url: "/good_clients" },
+], []);
 
   const [data, setData] = useState({});
 
@@ -48,7 +48,7 @@ const Queries = () => {
     if (token) {
       fetchData();
     }
-  }, [token]);
+  }, [token, endpoints]);
 
   return (
     <div
