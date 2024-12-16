@@ -57,6 +57,25 @@ app.listen(5000, () => {
   console.log("Server is running on port 5000");
 });
 
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers["authorization"];
+  const token = authHeader && authHeader.split(" ")[1];
+
+  if (token == null) {
+    console.error("No token provided");
+    return res.sendStatus(401);
+  }
+
+  jwt.verify(token, "your_jwt_secret", (err, user) => {
+    if (err) {
+      console.error("Token verification failed:", err.message);
+      return res.sendStatus(403);
+    }
+    req.user = user;
+    next();
+  });
+};
+
 app.post("/register", async (req, res) => {
   const {
     first,
@@ -126,25 +145,6 @@ app.post("/login", (req, res) => {
     res.status(200).json({ message: "Login successful", token });
   });
 });
-
-const authenticateToken = (req, res, next) => {
-  const authHeader = req.headers["authorization"];
-  const token = authHeader && authHeader.split(" ")[1];
-
-  if (token == null) {
-    console.error("No token provided");
-    return res.sendStatus(401);
-  }
-
-  jwt.verify(token, "your_jwt_secret", (err, user) => {
-    if (err) {
-      console.error("Token verification failed:", err.message);
-      return res.sendStatus(403);
-    }
-    req.user = user;
-    next();
-  });
-};
 
 app.get("/quote", authenticateToken, (req, res) => {
   res.json({ message: "Welcome to the quote page. You are authenticated!" });
@@ -260,6 +260,19 @@ app.get("/quotes", authenticateToken, (req, res) => {
   db.query(query, (err, result) => {
     if (err) {
       return res.status(500).json({ message: "Error fetching quotes", error: err.message });
+    }
+    res.json(result);
+  });
+});
+
+app.get("/specific_quotes", authenticateToken, (req, res) => {
+  const cust_id = req.user.userId;
+
+  db.query("SELECT * FROM quotes WHERE cust_id=?", [cust_id], (err, result) => {
+    if (err) {
+      return res
+        .status(500)
+        .json({ message: "Error fetching quotes", error: err });
     }
     res.json(result);
   });
@@ -407,39 +420,6 @@ app.patch("/quote_delete", authenticateToken, (req, res) => {
   });
 });
 
-app.get("/specific_quotes", authenticateToken, (req, res) => {
-  const cust_id = req.user.userId;
-
-  db.query("SELECT * FROM quotes WHERE cust_id=?", [cust_id], (err, result) => {
-    if (err) {
-      return res.status(500).json({ message: "Error fetching quotes", error: err });
-    }
-    res.json(result);
-  });
-});
-
-app.get('/api/getBills', authenticateToken, (req, res) => {
-  const userId = req.user.userId;
-
-  let query = `
-    SELECT b.BillID, b.OrderID, b.Amount, b.Status, b.Note, b.userId AS UserID, o.WorkPeriod
-    FROM bill b
-    LEFT JOIN orderofwork o ON b.OrderID = o.OrderID
-  `;
-
-  if (userId !== 0) {
-    query += ' WHERE b.userId = ?';
-  }
-
-  db.query(query, userId !== 0 ? [userId] : [], (err, results) => {
-    if (err) {
-      console.error('Error fetching bills:', err.message);
-      return res.status(500).json({ message: 'Error fetching bills', error: err.message });
-    }
-    res.json(results);
-  });
-});
-
 app.post("/generate_bill", authenticateToken, (req, res) => {
   const { quoteId } = req.body;
   const userId = req.user.userId;
@@ -466,9 +446,12 @@ app.post("/generate_bill", authenticateToken, (req, res) => {
 
       const { OrderID, AgreedPrice, cust_id } = result[0];
       console.log(
-        "\nOrderID:", OrderID,
-        "\nAgreedPrice:", AgreedPrice,
-        "\ncust_id:", cust_id
+        "\nOrderID:",
+        OrderID,
+        "\nAgreedPrice:",
+        AgreedPrice,
+        "\ncust_id:",
+        cust_id
       );
 
       db.query(
@@ -490,7 +473,10 @@ app.post("/generate_bill", authenticateToken, (req, res) => {
                 console.error("Error updating order status:", err.message);
                 return res
                   .status(500)
-                  .json({ message: "Failed to update order status", error: err.message });
+                  .json({
+                    message: "Failed to update order status",
+                    error: err.message,
+                  });
               }
 
               res.status(201).json({ message: "Bill generated successfully" });
@@ -500,6 +486,28 @@ app.post("/generate_bill", authenticateToken, (req, res) => {
       );
     }
   );
+});
+
+app.get('/api/getBills', authenticateToken, (req, res) => {
+  const userId = req.user.userId;
+
+  let query = `
+    SELECT b.BillID, b.OrderID, b.Amount, b.Status, b.Note, b.userId AS UserID, o.WorkPeriod
+    FROM bill b
+    LEFT JOIN orderofwork o ON b.OrderID = o.OrderID
+  `;
+
+  if (userId !== 0) {
+    query += ' WHERE b.userId = ?';
+  }
+
+  db.query(query, userId !== 0 ? [userId] : [], (err, results) => {
+    if (err) {
+      console.error('Error fetching bills:', err.message);
+      return res.status(500).json({ message: 'Error fetching bills', error: err.message });
+    }
+    res.json(results);
+  });
 });
 
 app.post("/api/payBill/:billId", authenticateToken, (req, res) => {
@@ -691,55 +699,55 @@ app.get("/big_clients", authenticateToken, (req, res) => {
     }
 ]
   */}
-  app.get("/difficult_clients", authenticateToken, (req, res) => {
+app.get("/difficult_clients", authenticateToken, (req, res) => {
     const query = `
-      WITH ApprovedQuotes AS (
+        WITH ApprovedQuotes AS (
+            SELECT 
+                cust_id, 
+                COUNT(DISTINCT quote_id) AS request_count
+            FROM 
+                quotes
+            WHERE 
+                approval_status = 'approved'
+            GROUP BY 
+                cust_id
+        ),
+        DifficultClients AS (
+            SELECT 
+                cust_id
+            FROM 
+                ApprovedQuotes
+            WHERE 
+                request_count > 2
+        )
         SELECT 
-          cust_id, 
-          COUNT(DISTINCT quote_id) AS request_count
+            u.id AS client_id,
+            u.first AS first_name,
+            u.last AS last_name,
+            u.phone,
+            u.email,
+            aq.request_count
         FROM 
-          quotes
+            users u
+        INNER JOIN 
+            ApprovedQuotes aq ON u.id = aq.cust_id
         WHERE 
-          approval_status = 'approved'
-        GROUP BY 
-          cust_id
-      ),
-      DifficultClients AS (
-        SELECT 
-          cust_id
-        FROM 
-          ApprovedQuotes
-        WHERE 
-          request_count = 3
-      )
-      SELECT 
-        u.id AS client_id,
-        u.first AS first_name,
-        u.last AS last_name,
-        u.phone,
-        u.email,
-        aq.request_count
-      FROM 
-        users u
-      INNER JOIN 
-        ApprovedQuotes aq ON u.id = aq.cust_id
-      WHERE 
-        aq.request_count = 3;
+            aq.request_count > 2;
     `;
-  
+
     db.query(query, (err, results) => {
-      if (err) {
-        console.error("Database error:", err);
-        return res.status(500).json({ error: "Database query failed" });
-      }
-  
-      if (results.length === 0) {
-        return res.status(204).json({ message: "No difficult clients found" });
-      }
-  
-      res.json(results); // Send the query result as the response
+        if (err) {
+            console.error("Database error:", err);
+            return res.status(500).json({ error: "Database query failed" });
+        }
+
+        if (results.length === 0) {
+            return res.status(404).json({ message: "No difficult clients found" });
+        }
+
+        res.json(results); // Send the query result as the response
     });
-  });
+});
   
 // This Month Quotes Endpoint
 {/*
